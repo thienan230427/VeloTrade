@@ -36,6 +36,9 @@
   
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- Socket.io Client for Real-time WebSockets -->
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 
   <style>
     body {
@@ -92,9 +95,9 @@
         </div>
         <div class="hidden md:flex items-center gap-2 px-3 py-1 bg-success/10 border border-success/15 rounded-full text-[11px] text-success">
           <span class="w-1.5 h-1.5 bg-success rounded-full animate-ping"></span>
-          <span>Routing Node V4.5</span>
+          <span>WebSockets Live Node V4.5</span>
           <span class="text-white/20">|</span>
-          <span class="font-mono text-white/80">1.8 ms</span>
+          <span id="backend-status-indicator" class="font-mono text-white/80">Connecting...</span>
         </div>
       </div>
 
@@ -107,7 +110,7 @@
           <i data-lucide="candlestick-chart" class="w-3.5 h-3.5"></i> Sàn Giao Dịch
         </button>
         <button onclick="switchView('coin')" id="tab-coin" class="nav-btn px-4 py-1.5 text-xs font-medium rounded-lg text-gray-400 hover:text-white transition-all flex items-center gap-1.5">
-          <i data-lucide="coins" class="w-3.5 h-3.5"></i> Chi Tiết Coin
+          <i data-lucide="coins" class="w-3.5 h-3.5"></i> Chi Tiết Coin (21 Coin)
         </button>
         <button onclick="switchView('kyc')" id="tab-kyc" class="nav-btn px-4 py-1.5 text-xs font-medium rounded-lg text-gray-400 hover:text-white transition-all flex items-center gap-1.5">
           <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Xác Thực KYC
@@ -162,7 +165,7 @@
               <span class="bg-gradient-to-r from-primary via-secondary to-purple-400 bg-clip-text text-transparent">Hiệu Năng Vượt Trội</span>
             </h1>
             <p class="text-gray-400 text-sm max-w-lg leading-relaxed">
-              Trải nghiệm độ trễ khớp lệnh cực thấp, tính thanh khoản sâu sắc cùng các công cụ quản lý rủi ro tiên tiến đạt tiêu chuẩn toàn cầu do Sếp Thiên Ân & Grace phát triển.
+              VeloTrade tích hợp luồng dữ liệu WebSockets thời gian thực từ Backend Node.js cùng Cơ sở dữ liệu MySQL lưu trữ 21 đồng coin hot cực kỳ tối ưu cho Sếp Thiên Ân!
             </p>
             <div class="flex flex-wrap gap-3 pt-2">
               <button onclick="switchView('trade')" class="bg-primary hover:bg-primary/95 text-bg font-bold px-5 py-3 rounded-lg transition-all flex items-center gap-2">
@@ -170,7 +173,7 @@
                 <i data-lucide="terminal" class="w-4 h-4"></i>
               </button>
               <button onclick="switchView('coin')" class="glass-panel hover:bg-white/5 text-white font-medium px-5 py-3 rounded-lg transition-all flex items-center gap-2">
-                <span>Xem Thông Tin Thị Trường</span>
+                <span>Xem Thông Tin Thị Trường (21 Coin)</span>
                 <i data-lucide="trending-up" class="w-4 h-4"></i>
               </button>
             </div>
@@ -179,10 +182,10 @@
           <div class="lg:col-span-5 relative">
             <div class="relative glass-panel rounded-xl p-5 border border-white/5 space-y-4">
               <div class="flex items-center justify-between">
-                <span class="text-xs font-semibold text-gray-400 tracking-wider">LIVE COIN RATES</span>
+                <span class="text-xs font-semibold text-gray-400 tracking-wider">MỨC GIÁ THỰC TẾ (WS FEED)</span>
                 <span class="flex items-center gap-1 text-xs text-success font-medium">
                   <span class="w-1.5 h-1.5 bg-success rounded-full animate-ping"></span>
-                  <span>System Live</span>
+                  <span id="ws-status-text">WebSockets Connecting</span>
                 </span>
               </div>
               <div class="space-y-2.5" id="landing-hero-coin-preview-list">
@@ -195,17 +198,17 @@
         <!-- Coins table -->
         <section class="space-y-4">
           <div>
-            <h2 class="text-lg font-bold font-display text-white">Xu Hướng Tài Sản Thị Trường</h2>
-            <p class="text-xs text-gray-400 mt-0.5">Cập nhật chỉ số thanh khoản thực tế từ luồng dữ liệu hệ thống.</p>
+            <h2 class="text-lg font-bold font-display text-white">Xu Hướng Tài Sản Thị Trường (Truy vấn từ MySQL)</h2>
+            <p class="text-xs text-gray-400 mt-0.5">Dữ liệu thực tế được lấy trực tiếp từ bảng <code>coins</code> trong cơ sở dữ liệu MySQL của Sếp!</p>
           </div>
           <div class="overflow-x-auto rounded-xl border border-white/5 bg-surface/40">
             <table class="w-full text-left border-collapse">
               <thead>
                 <tr class="border-b border-white/5 text-[10px] text-gray-400 uppercase tracking-wider font-mono">
                   <th class="px-6 py-3">Tên Tài Sản</th>
-                  <th class="px-6 py-3">Giá Hiện Tại</th>
+                  <th class="px-6 py-3">Giá Hiện Tại (USDT)</th>
                   <th class="px-6 py-3">Thay Đổi 24h</th>
-                  <th class="px-6 py-3">Thể Loại</th>
+                  <th class="px-6 py-3">Thể Loại (Category)</th>
                   <th class="px-6 py-3 text-right">Hành Động</th>
                 </tr>
               </thead>
@@ -223,7 +226,7 @@
       <aside class="w-full lg:w-56 border-r border-white/5 bg-surface/40 p-4 flex flex-col justify-between shrink-0">
         <div class="space-y-3">
           <span class="text-[10px] text-gray-400 uppercase font-mono tracking-wider px-2 block">Cặp Giao Dịch Hot</span>
-          <div class="space-y-1" id="trading-pair-selector-box"></div>
+          <div class="space-y-1 overflow-y-auto max-h-[300px] custom-scroll" id="trading-pair-selector-box"></div>
         </div>
         <div class="glass-panel rounded-lg p-3 space-y-2 font-mono mt-4">
           <div class="flex items-center justify-between border-b border-white/5 pb-1.5">
@@ -263,9 +266,9 @@
             <div class="flex-grow relative bg-[#090D14]/90 p-4 flex flex-col justify-center items-center text-center">
               <div class="space-y-2">
                 <i data-lucide="line-chart" class="w-12 h-12 text-primary animate-pulse mx-auto"></i>
-                <h3 class="text-base font-bold text-white font-display">Biểu Đồ Giá Thời Gian Thực</h3>
-                <p class="text-xs text-gray-400 max-w-sm">Kết nối với Node.js WebSocket Server để cập nhật biểu đồ nến thời gian thực của cặp giao dịch.</p>
-                <div class="inline-block px-3 py-1 bg-primary/10 border border-primary/20 rounded-full text-xs text-primary font-mono" id="live-price-indicator">
+                <h3 class="text-base font-bold text-white font-display">Biểu Đồ Giá WebSocket Thực Tế</h3>
+                <p class="text-xs text-gray-400 max-w-sm">Dữ liệu được đẩy tự động từ Backend Node.js WebSockets Server.</p>
+                <div class="inline-block px-4 py-2 bg-primary/10 border border-primary/20 rounded-full text-sm font-bold text-primary font-mono" id="live-price-indicator">
                   BTC/USDT: $67,500.00
                 </div>
               </div>
@@ -356,7 +359,7 @@
       </aside>
     </div>
 
-    <!-- 3. COINS DETAIL VIEW (20+ COINS) -->
+    <!-- 3. COINS DETAIL VIEW (21 COINS FROM MYSQL) -->
     <div id="view-coin" class="view-panel h-full flex flex-col lg:flex-row hidden">
       <!-- Coin List sidebar -->
       <aside class="w-full lg:w-56 border-r border-white/5 bg-surface/40 p-4 flex flex-col overflow-y-auto custom-scroll shrink-0">
@@ -411,7 +414,7 @@
 
           <div class="space-y-3">
             <h3 class="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
-              <i data-lucide="info" class="w-4 h-4 text-primary"></i> Mô Tả & Đánh Giá Chi Tiết
+              <i data-lucide="info" class="w-4 h-4 text-primary"></i> Mô Tả & Đánh Giá Chi Tiết (Từ MySQL Database)
             </h3>
             <div class="glass-panel rounded-lg p-5 leading-relaxed text-sm text-gray-300 whitespace-pre-line" id="coin-det-desc">
               <!-- Description content -->
@@ -475,13 +478,13 @@
       </div>
     </div>
 
-    <!-- 5. SUPPORT TICKETS VIEW -->
+    <!-- 5. SUPPORT TICKETS (CONNECTED TO MYSQL) -->
     <div id="view-support" class="view-panel h-full overflow-y-auto px-6 py-8 hidden">
       <div class="max-w-[800px] mx-auto space-y-6">
         <div class="flex items-center justify-between border-b border-white/5 pb-4">
           <div>
-            <h2 class="text-lg font-bold font-display text-white">Trung Tâm Hỗ Trợ Khách Hàng</h2>
-            <p class="text-xs text-gray-400 mt-0.5">Tạo yêu cầu trợ giúp đến ban quản trị VeloTrade desu~.</p>
+            <h2 class="text-lg font-bold font-display text-white">Trung Tâm Hỗ Trợ Khách Hàng (MySQL Linked)</h2>
+            <p class="text-xs text-gray-400 mt-0.5">Tạo yêu cầu trợ giúp và lưu trữ trực tiếp vào database MySQL của VeloTrade!</p>
           </div>
           <button onclick="toggleTicketForm(true)" class="bg-primary hover:opacity-90 text-bg font-bold text-xs px-3.5 py-2 rounded-lg transition-all flex items-center gap-1">
             <i data-lucide="plus" class="w-3.5 h-3.5"></i> Tạo Ticket Mới
@@ -514,7 +517,7 @@
 
         <!-- Tickets list -->
         <div class="space-y-3">
-          <h3 class="text-xs font-bold text-white uppercase tracking-wider">Lịch Sử Yêu Cầu Của Sếp</h3>
+          <h3 class="text-xs font-bold text-white uppercase tracking-wider">Lịch Sử Yêu Cầu Của Sếp (Nạp từ MySQL)</h3>
           <div id="tickets-list-container" class="space-y-3">
             <!-- Programmatic items -->
           </div>
@@ -617,38 +620,255 @@
 
   <!-- SCRIPT LOGIC ENGINE -->
   <script>
-    // System Data Model State
-    const coinsData = [
-      { id: 1, symbol: 'BTC', name: 'Bitcoin', category: 'LAYER 1', circulating: '19,700,000 BTC', max: '21,000,000 BTC', ratio: '93.8%', logo: 'https://cryptologos.cc/logos/bitcoin-btc-logo.png', web: 'https://bitcoin.org', paper: 'https://bitcoin.org/bitcoin.pdf', desc: 'Bitcoin là đồng tiền điện tử đầu tiên trên thế giới, được tạo ra vào năm 2009 bởi một cá nhân hoặc nhóm ẩn danh dưới tên Satoshi Nakamoto. Hoạt động trên cơ chế đồng thuận Proof of Work (PoW) phi tập trung tuyệt đối.' },
-      { id: 2, symbol: 'ETH', name: 'Ethereum', category: 'LAYER 1', circulating: '122,000,000 ETH', max: 'Vô Hạn', ratio: 'N/A', logo: 'https://cryptologos.cc/logos/ethereum-eth-logo.png', web: 'https://ethereum.org', paper: 'https://ethereum.org/whitepaper.pdf', desc: 'Ethereum là mạng lưới blockchain mã nguồn mở phi tập trung có tính năng hợp đồng thông minh (Smart Contracts). Được đồng sáng lập bởi Vitalik Buterin vào năm 2015, Ethereum là nền tảng khởi nguồn cho các ứng dụng DeFi và NFT.' },
-      { id: 3, symbol: 'USDT', name: 'Tether', category: 'STABLECOIN', circulating: '112,000,000,000 USDT', max: 'Vô Hạn', ratio: 'N/A', logo: 'https://cryptologos.cc/logos/tether-usdt-logo.png', web: 'https://tether.to', paper: 'https://tether.to/whitepaper.pdf', desc: 'Tether (USDT) là đồng ổn định giá (Stablecoin) lớn nhất thị trường hiện nay, được neo giá trực tiếp theo tỷ lệ 1:1 với đồng đô la Mỹ USD, cung cấp tính thanh khoản dồi dào cho các nhà giao dịch.' },
-      { id: 4, symbol: 'SOL', name: 'Solana', category: 'LAYER 1', circulating: '461,000,000 SOL', max: 'Vô Hạn', ratio: 'N/A', logo: 'https://cryptologos.cc/logos/solana-sol-logo.png', web: 'https://solana.com', paper: 'https://solana.com/solana-whitepaper.pdf', desc: 'Solana là blockchain Layer 1 hiệu năng siêu cao, sử dụng cơ chế đồng thuận Proof of History (PoH) kết hợp Proof of Stake (PoS) để mang đến tốc độ xử lý hàng chục ngàn giao dịch mỗi giây với chi phí cực rẻ.' }
+    // Config Backend Node.js Server URL
+    const BACKEND_URL = 'http://localhost:4000';
+
+    // Global Coins Database (Loads from MySQL, falls back to static seed)
+    let coinsData = [];
+    const staticCoinsFallback = [
+      { id: 1, symbol: 'BTC', name: 'Bitcoin', category: 'LAYER 1', circulating: '19,700,000 BTC', max: '21,000,000 BTC', ratio: '93.8%', logo: 'https://cryptologos.cc/logos/bitcoin-btc-logo.png', web: 'https://bitcoin.org', paper: 'https://bitcoin.org/bitcoin.pdf', desc: 'Bitcoin là đồng tiền điện tử đầu tiên, giải pháp lưu trữ tài sản phi tập trung.' },
+      { id: 2, symbol: 'ETH', name: 'Ethereum', category: 'LAYER 1', circulating: '122,000,000 ETH', max: 'Vô Hạn', ratio: 'N/A', logo: 'https://cryptologos.cc/logos/ethereum-eth-logo.png', web: 'https://ethereum.org', paper: 'https://ethereum.org/whitepaper.pdf', desc: 'Ethereum là mạng lưới blockchain hợp đồng thông minh đầu tiên.' },
+      { id: 3, symbol: 'USDT', name: 'Tether', category: 'STABLECOIN', circulating: '112,000,000,000 USDT', max: 'Vô Hạn', ratio: 'N/A', logo: 'https://cryptologos.cc/logos/tether-usdt-logo.png', web: 'https://tether.to', paper: 'https://tether.to/whitepaper.pdf', desc: 'Đồng đô la điện tử ổn định giá.' },
+      { id: 4, symbol: 'SOL', name: 'Solana', category: 'LAYER 1', circulating: '461,000,000 SOL', max: 'Vô Hạn', ratio: 'N/A', logo: 'https://cryptologos.cc/logos/solana-sol-logo.png', web: 'https://solana.com', paper: 'https://solana.com/solana-whitepaper.pdf', desc: 'Solana là blockchain hiệu năng siêu cao, phí rẻ.' }
     ];
 
     let userKYC = {
       name: '',
       idNumber: '',
       documentUrl: '',
-      status: 'unverified' // unverified, pending, verified
+      status: 'unverified'
     };
 
-    let tickets = [
-      { id: 'TKT-1024', subject: 'Lỗi nạp tiền USDT qua mạng TRC20', category: 'DEPOSIT', status: 'open' }
-    ];
-
+    let tickets = [];
     let openOrders = [];
     let currentPair = 'BTC_USDT';
     let currentSide = 'buy';
     let currentType = 'limit';
     let maintenanceMode = false;
-    let btcPrice = 67500.00;
+    
+    // Live Price Map for WS Updates
+    let livePrices = {
+      BTC: 67500.00,
+      ETH: 3500.00,
+      USDT: 1.00,
+      SOL: 145.00
+    };
 
-    // Set active view routing
+    let socket;
+
+    // Initialize WebSockets and connect beautifully to Backend desu~!
+    function initWebSockets() {
+      const indicator = document.getElementById('backend-status-indicator');
+      const wsStatusText = document.getElementById('ws-status-text');
+
+      try {
+        socket = io(BACKEND_URL, { timeout: 5000 });
+
+        socket.on('connect', () => {
+          console.log('📡 Connected successfully to VeloTrade WebSockets Server! (★ω★)');
+          if (indicator) {
+            indicator.textContent = 'ONLINE (WS)';
+            indicator.className = 'font-mono text-success font-bold';
+          }
+          if (wsStatusText) {
+            wsStatusText.textContent = 'WebSockets Online';
+            wsStatusText.className = 'text-success font-medium';
+          }
+          spawnToast('WebSockets Kết Nối', 'Đã liên kết dữ liệu thời gian thực với Node.js Backend desu~!', 'success');
+        });
+
+        socket.on('disconnect', () => {
+          handleWSDisconnect();
+        });
+
+        socket.on('connect_error', () => {
+          handleWSDisconnect();
+        });
+
+        // Listen for real-time price updates emitted by Node.js Server!
+        socket.on('price_update', (data) => {
+          if (!Array.isArray(data)) return;
+          
+          data.forEach(update => {
+            const sym = update.symbol.split('_')[0];
+            livePrices[sym] = update.price;
+
+            // Instantly update active pair display if it matches
+            if (update.symbol === currentPair) {
+              const activePrice = document.getElementById('active-pair-price');
+              if (activePrice) activePrice.textContent = `$${update.price.toLocaleString()}`;
+
+              const midPrice = document.getElementById('exchange-mid-price');
+              if (midPrice) midPrice.textContent = `$${update.price.toLocaleString()}`;
+
+              const livePriceInd = document.getElementById('live-price-indicator');
+              if (livePriceInd) livePriceInd.textContent = `${currentPair.replace('_', '/')}: $${update.price.toLocaleString()}`;
+            }
+
+            // Update marquee individual prices
+            const marqueePrice = document.getElementById(`marquee-price-${sym}`);
+            if (marqueePrice) marqueePrice.textContent = `$${update.price.toLocaleString()}`;
+          });
+
+          // Refresh the dynamic elements
+          renderLandingPreviews();
+          renderLandingFeaturedTable();
+          renderOrderBookDepth();
+        });
+
+        // Initial prices bundle
+        socket.on('initial_prices', (prices) => {
+          livePrices = { ...livePrices, ...prices };
+          renderLandingPreviews();
+          renderLandingFeaturedTable();
+        });
+
+      } catch (err) {
+        handleWSDisconnect();
+      }
+    }
+
+    function handleWSDisconnect() {
+      const indicator = document.getElementById('backend-status-indicator');
+      const wsStatusText = document.getElementById('ws-status-text');
+      
+      if (indicator) {
+        indicator.textContent = 'LOCAL STANDALONE';
+        indicator.className = 'font-mono text-amber-500 font-bold';
+      }
+      if (wsStatusText) {
+        wsStatusText.textContent = 'Standalone Mode';
+        wsStatusText.className = 'text-amber-500 font-medium';
+      }
+
+      // Fallback local simulation loop if server is not running
+      if (!window.fallbackIntervalInitialized) {
+        window.fallbackIntervalInitialized = true;
+        console.warn('Backend server offline. Initiating standalone browser simulation loop desu~.');
+        setInterval(() => {
+          Object.keys(livePrices).forEach(sym => {
+            if (sym === 'USDT') return;
+            const fluctuation = (Math.random() - 0.5) * (livePrices[sym] * 0.001);
+            livePrices[sym] = parseFloat((livePrices[sym] + fluctuation).toFixed(sym === 'SHIB' ? 6 : 2));
+            
+            const marqueePrice = document.getElementById(`marquee-price-${sym}`);
+            if (marqueePrice) marqueePrice.textContent = `$${livePrices[sym].toLocaleString()}`;
+          });
+
+          const currentPriceVal = livePrices[currentPair.split('_')[0]] || 67500;
+          const activePrice = document.getElementById('active-pair-price');
+          if (activePrice) activePrice.textContent = `$${currentPriceVal.toLocaleString()}`;
+
+          const midPrice = document.getElementById('exchange-mid-price');
+          if (midPrice) midPrice.textContent = `$${currentPriceVal.toLocaleString()}`;
+
+          const livePriceInd = document.getElementById('live-price-indicator');
+          if (livePriceInd) livePriceInd.textContent = `${currentPair.replace('_', '/')}: $${currentPriceVal.toLocaleString()}`;
+
+          renderLandingPreviews();
+          renderLandingFeaturedTable();
+          renderOrderBookDepth();
+        }, 1200);
+      }
+    }
+
+    // Fetch coins from MySQL
+    async function loadCoinsDatabase() {
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/coins`);
+        const data = await res.json();
+        if (data.success && data.coins && data.coins.length > 0) {
+          coinsData = data.coins.map(coin => ({
+            id: coin.id,
+            symbol: coin.symbol,
+            name: coin.name,
+            category: coin.category.toUpperCase(),
+            circulating: coin.circulating_supply ? `${parseFloat(coin.circulating_supply).toLocaleString()} ${coin.symbol}` : 'N/A',
+            max: coin.max_supply ? `${parseFloat(coin.max_supply).toLocaleString()} ${coin.symbol}` : 'Vô Hạn',
+            ratio: coin.max_supply ? `${((coin.circulating_supply / coin.max_supply) * 100).toFixed(1)}%` : 'N/A',
+            logo: coin.logo_url || 'https://cryptologos.cc/logos/bitcoin-btc-logo.png',
+            web: coin.website_url || '#',
+            paper: coin.whitepaper_url || '#',
+            desc: coin.description
+          }));
+          console.log(`Successfully loaded ${coinsData.length} coins from MySQL database! (◕‿◕✿)`);
+          spawnToast('Database Connected', `Đã tải thành công ${coinsData.length} đồng coin từ cơ sở dữ liệu MySQL!`, 'success');
+        } else {
+          useFallbackCoins();
+        }
+      } catch (err) {
+        console.warn('Could not contact REST API for coins. Using static fallback seeds.');
+        useFallbackCoins();
+      }
+
+      initMarquee();
+      setupPairSelector();
+      renderLandingPreviews();
+      renderLandingFeaturedTable();
+    }
+
+    function useFallbackCoins() {
+      coinsData = staticCoinsFallback;
+    }
+
+    // Fetch support tickets from MySQL
+    async function loadTicketsDatabase() {
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/tickets`);
+        const data = await res.json();
+        if (data.success && data.tickets) {
+          tickets = data.tickets.map((t, idx) => ({
+            id: `TKT-${t.id}`,
+            subject: t.subject,
+            category: t.category,
+            status: t.status
+          }));
+          renderSupportTickets();
+          renderAdminDashboard();
+        }
+      } catch (err) {
+        console.warn('Could not contact REST API for tickets.');
+      }
+    }
+
+    // Submit ticket to MySQL
+    async function submitTicket(event) {
+      event.preventDefault();
+      const subj = document.getElementById('ticket-input-subj').value;
+      const cat = document.getElementById('ticket-input-cat').value;
+
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/tickets`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: 1, subject: subj, category: cat })
+        });
+        const data = await res.json();
+        if (data.success) {
+          spawnToast('Gửi ticket thành công', 'Yêu cầu của Sếp đã được ghi nhận trực tiếp vào MySQL Database!', 'success');
+          toggleTicketForm(false);
+          await loadTicketsDatabase();
+        }
+      } catch (err) {
+        // Fallback local creation
+        const newTkt = {
+          id: 'TKT-' + (Math.floor(Math.random() * 8999) + 1000),
+          subject: subj,
+          category: cat,
+          status: 'open'
+        };
+        tickets.unshift(newTkt);
+        spawnToast('Gửi ticket thành công (Local)', 'Đã tạo ticket ngoại tuyến desu~!', 'success');
+        toggleTicketForm(false);
+        renderSupportTickets();
+      }
+    }
+
+    // Route Switching
     function switchView(viewId) {
       document.querySelectorAll('.view-panel').forEach(el => el.classList.add('hidden'));
       document.getElementById('view-' + viewId).classList.remove('hidden');
 
-      // Update navbar styling
       document.querySelectorAll('.nav-btn').forEach(btn => {
         btn.classList.remove('text-primary', 'bg-white/5');
         btn.classList.add('text-gray-400');
@@ -659,16 +879,19 @@
         activeBtn.classList.add('text-primary', 'bg-white/5');
       }
 
-      // Special rendering hooks
       if (viewId === 'coin') renderCoinsList();
       if (viewId === 'kyc') renderKYCView();
-      if (viewId === 'support') renderSupportTickets();
-      if (viewId === 'admin') renderAdminDashboard();
+      if (viewId === 'support') loadTicketsDatabase();
+      if (viewId === 'admin') {
+        loadTicketsDatabase();
+        renderAdminDashboard();
+      }
     }
 
-    // Dynamic toast alerts helper desu~
+    // Toast Alert Engine
     function spawnToast(title, msg, type = 'success') {
       const container = document.getElementById('toast-container');
+      if (!container) return;
       const toast = document.createElement('div');
       toast.className = 'glass-panel pointer-events-auto p-3.5 rounded-lg border-l-4 w-72 flex gap-3 transition-all duration-300 transform translate-y-2 opacity-0';
       
@@ -690,67 +913,105 @@
       container.appendChild(toast);
       lucide.createIcons();
 
-      // Trigger transition
       setTimeout(() => {
         toast.classList.remove('translate-y-2', 'opacity-0');
       }, 50);
 
-      // Dismiss timer
       setTimeout(() => {
         toast.classList.add('opacity-0', 'translate-y-[-10px]');
         setTimeout(() => toast.remove(), 300);
-      }, 4000);
+      }, 4500);
     }
 
-    // Real-time Marquee ticker stream simulation
+    // Init Header Marquee
     function initMarquee() {
       const stream = document.getElementById('marquee-stream');
+      if (!stream) return;
       let html = '';
       coinsData.forEach(coin => {
-        html += `
-          <div class="flex items-center gap-2">
-            <span class="text-white font-bold">${coin.symbol}/USDT</span>
-            <span class="text-success" id="marquee-price-${coin.symbol}">$${btcPrice}</span>
-            <span class="text-success text-[10px] font-semibold">+2.4%</span>
-          </div>
-        `;
+        if (coin.symbol !== 'USDT') {
+          html += `
+            <div class="flex items-center gap-2">
+              <span class="text-white font-bold">${coin.symbol}/USDT</span>
+              <span class="text-success" id="marquee-price-${coin.symbol}">$${(livePrices[coin.symbol] || 0).toLocaleString()}</span>
+              <span class="text-success text-[10px] font-semibold">+2.45%</span>
+            </div>
+          `;
+        }
       });
-      // Double the stream content to ensure seamless loop scroll desu~
       stream.innerHTML = html + html;
     }
 
-    // Simulated WebSocket background feed
-    setInterval(() => {
-      // Simulate price fluctuation
-      const fluctuation = (Math.random() - 0.5) * 80;
-      btcPrice += fluctuation;
-      btcPrice = parseFloat(btcPrice.toFixed(2));
+    // Render Preview Box (Hero widget)
+    function renderLandingPreviews() {
+      const box = document.getElementById('landing-hero-coin-preview-list');
+      if (!box) return;
 
-      // Update GUI components instantly
-      const livePriceInd = document.getElementById('live-price-indicator');
-      if (livePriceInd) livePriceInd.textContent = `BTC/USDT: $${btcPrice.toLocaleString()}`;
+      let html = '';
+      const previewCoins = coinsData.slice(0, 4); // show first 4
+      previewCoins.forEach(coin => {
+        const curPrice = livePrices[coin.symbol] || 0;
+        html += `
+          <div class="flex items-center justify-between p-2.5 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 transition-all">
+            <div class="flex items-center gap-2.5">
+              <img src="${coin.logo}" class="w-5.5 h-5.5 rounded-full" alt="" />
+              <div>
+                <p class="text-xs font-bold text-white">${coin.name}</p>
+                <p class="text-[9px] text-gray-400 font-mono">${coin.symbol}/USDT</p>
+              </div>
+            </div>
+            <div class="text-right font-mono text-xs">
+              <p class="text-white font-bold">$${curPrice.toLocaleString()}</p>
+              <p class="text-success text-[10px] font-medium">+1.85%</p>
+            </div>
+          </div>
+        `;
+      });
+      box.innerHTML = html;
+    }
 
-      const activePairPrice = document.getElementById('active-pair-price');
-      if (activePairPrice) activePairPrice.textContent = `$${btcPrice.toLocaleString()}`;
+    // Render Market Coins Table
+    function renderLandingFeaturedTable() {
+      const tbody = document.getElementById('landing-featured-tbody');
+      if (!tbody) return;
 
-      const exchangeMid = document.getElementById('exchange-mid-price');
-      if (exchangeMid) exchangeMid.textContent = `$${btcPrice.toLocaleString()}`;
+      let html = '';
+      coinsData.forEach(coin => {
+        const curPrice = livePrices[coin.symbol] || 0;
+        html += `
+          <tr class="hover:bg-white/5 transition-all">
+            <td class="px-6 py-3.5 flex items-center gap-3">
+              <img src="${coin.logo}" class="w-6 h-6 rounded-full" alt="" />
+              <div>
+                <span class="text-white font-bold block">${coin.name}</span>
+                <span class="text-gray-500 text-xs block font-mono">${coin.symbol}/USDT</span>
+              </div>
+            </td>
+            <td class="px-6 py-3.5 text-white font-bold">$${curPrice.toLocaleString()}</td>
+            <td class="px-6 py-3.5 text-success font-semibold">+2.45%</td>
+            <td class="px-6 py-3.5 text-xs"><span class="px-2 py-0.5 rounded-full bg-white/5 text-gray-300 border border-white/5 font-display">${coin.category}</span></td>
+            <td class="px-6 py-3.5 text-right">
+              <button onclick="changeActivePair('${coin.symbol}_USDT'); switchView('trade')" class="bg-primary/10 hover:bg-primary text-primary hover:text-bg font-bold text-xs px-3 py-1.5 rounded transition-all">
+                Giao Dịch
+              </button>
+            </td>
+          </tr>
+        `;
+      });
+      tbody.innerHTML = html;
+    }
 
-      const marqueePriceBTC = document.getElementById('marquee-price-BTC');
-      if (marqueePriceBTC) marqueePriceBTC.textContent = `$${btcPrice.toLocaleString()}`;
-
-      renderOrderBookDepth();
-    }, 1200);
-
-    // Order book bids and asks generator desu~
+    // Order book bids and asks generator
     function renderOrderBookDepth() {
       const asksBox = document.getElementById('exchange-asks-box');
       const bidsBox = document.getElementById('exchange-bids-box');
       if (!asksBox || !bidsBox) return;
 
+      const curPrice = livePrices[currentPair.split('_')[0]] || 67500;
+
       let asksHtml = '';
       for (let i = 4; i > 0; i--) {
-        const askPrice = btcPrice + (i * 1.5);
+        const askPrice = curPrice + (i * 1.5);
         const askQty = (Math.random() * 2).toFixed(4);
         asksHtml += `
           <div class="flex justify-between hover:bg-white/5 px-2 py-0.5 rounded transition-all">
@@ -763,7 +1024,7 @@
 
       let bidsHtml = '';
       for (let i = 1; i <= 4; i++) {
-        const bidPrice = btcPrice - (i * 1.5);
+        const bidPrice = curPrice - (i * 1.5);
         const bidQty = (Math.random() * 2).toFixed(4);
         bidsHtml += `
           <div class="flex justify-between hover:bg-white/5 px-2 py-0.5 rounded transition-all">
@@ -775,7 +1036,7 @@
       bidsBox.innerHTML = bidsHtml;
     }
 
-    // Interactive Trading Desk handlers
+    // Set side
     function setTradingSide(side) {
       currentSide = side;
       const buyBtn = document.getElementById('btn-side-buy');
@@ -801,11 +1062,13 @@
       const marketBtn = document.getElementById('btn-type-market');
       const priceInput = document.getElementById('trade-input-price');
 
+      const curPrice = livePrices[currentPair.split('_')[0]] || 67500;
+
       if (type === 'limit') {
         limitBtn.className = 'px-2 py-0.5 rounded border border-primary text-primary font-bold text-[10px]';
         marketBtn.className = 'px-2 py-0.5 rounded border border-white/10 text-gray-400 text-[10px]';
         priceInput.disabled = false;
-        priceInput.value = btcPrice;
+        priceInput.value = curPrice;
       } else {
         limitBtn.className = 'px-2 py-0.5 rounded border border-white/10 text-gray-400 text-[10px]';
         marketBtn.className = 'px-2 py-0.5 rounded border border-primary text-primary font-bold text-[10px]';
@@ -814,12 +1077,13 @@
       }
     }
 
-    // Calculate total trade cost dynamically
+    // Quantities calculator listener
     const qtyInput = document.getElementById('trade-input-qty');
     if (qtyInput) {
       qtyInput.addEventListener('input', () => {
         const qty = parseFloat(qtyInput.value) || 0;
-        const price = currentType === 'limit' ? (parseFloat(document.getElementById('trade-input-price').value) || 0) : btcPrice;
+        const curPrice = livePrices[currentPair.split('_')[0]] || 67500;
+        const price = currentType === 'limit' ? (parseFloat(document.getElementById('trade-input-price').value) || 0) : curPrice;
         const total = qty * price;
         document.getElementById('trade-total-cost').textContent = `$${total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
       });
@@ -837,7 +1101,8 @@
         return;
       }
 
-      const price = currentType === 'limit' ? parseFloat(document.getElementById('trade-input-price').value) : btcPrice;
+      const curPrice = livePrices[currentPair.split('_')[0]] || 67500;
+      const price = currentType === 'limit' ? parseFloat(document.getElementById('trade-input-price').value) : curPrice;
       
       const newOrder = {
         id: Math.floor(Math.random() * 90000) + 10000,
@@ -896,17 +1161,17 @@
       renderOpenOrders();
     }
 
-    // Sidebar selectors setup
     function setupPairSelector() {
       const box = document.getElementById('trading-pair-selector-box');
       if (!box) return;
       let html = '';
       coinsData.forEach(coin => {
         if (coin.symbol !== 'USDT') {
+          const curPrice = livePrices[coin.symbol] || 0;
           html += `
             <button onclick="changeActivePair('${coin.symbol}_USDT')" class="w-full text-left px-3 py-2 text-xs rounded-lg transition-all flex justify-between items-center ${coin.symbol === 'BTC' ? 'bg-white/5 text-primary border-l-2 border-primary' : 'text-gray-400 hover:text-white'}">
               <span class="font-bold">${coin.symbol}/USDT</span>
-              <span>$${btcPrice}</span>
+              <span>$${curPrice.toLocaleString()}</span>
             </button>
           `;
         }
@@ -921,7 +1186,6 @@
       setupPairSelector();
     }
 
-    // Setup sidebar wallet balances
     function renderSidebarWallets() {
       const box = document.getElementById('trading-sidebar-wallets');
       if (!box) return;
@@ -945,7 +1209,7 @@
       `;
     }
 
-    // CMS 21 Coins View Engine desu~
+    // CMS 21 Coins Rendering from MySQL
     function renderCoinsList() {
       const box = document.getElementById('coin-list-nav-box');
       if (!box) return;
@@ -954,14 +1218,16 @@
       coinsData.forEach(coin => {
         html += `
           <button onclick="selectActiveCoin(${coin.id})" class="w-full text-left px-3 py-2 text-xs rounded-lg transition-all flex items-center gap-2 text-gray-400 hover:text-white">
-            <img src="${coin.logo}" class="w-4 h-4 rounded-full" alt="" />
+            <img src="${coin.logo}" class="w-4.5 h-4.5 rounded-full" alt="" />
             <span class="font-bold text-white">${coin.name}</span>
             <span class="text-gray-500">(${coin.symbol})</span>
           </button>
         `;
       });
       box.innerHTML = html;
-      selectActiveCoin(1); // Auto-select Bitcoin
+      if (coinsData.length > 0) {
+        selectActiveCoin(coinsData[0].id); // Auto select first coin
+      }
     }
 
     function selectActiveCoin(id) {
@@ -983,7 +1249,6 @@
       document.getElementById('coin-det-web').href = coin.web;
       document.getElementById('coin-det-paper').href = coin.paper;
 
-      // Mock news tied to the coin
       const newsBox = document.getElementById('coin-det-news');
       newsBox.innerHTML = `
         <div class="glass-panel rounded-lg p-4 space-y-2">
@@ -999,7 +1264,7 @@
       `;
     }
 
-    // KYC forms handlers desu~
+    // KYC rendering
     function renderKYCView() {
       const successPanel = document.getElementById('kyc-success-panel');
       const pendingPanel = document.getElementById('kyc-pending-panel');
@@ -1018,24 +1283,38 @@
       }
     }
 
-    function submitKYC(event) {
+    async function submitKYC(event) {
       event.preventDefault();
       userKYC.name = document.getElementById('kyc-input-name').value;
       userKYC.idNumber = document.getElementById('kyc-input-id').value;
       userKYC.documentUrl = document.getElementById('kyc-input-doc').value;
       userKYC.status = 'pending';
 
+      try {
+        await fetch(`${BACKEND_URL}/api/kyc`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: 1,
+            fullName: userKYC.name,
+            idNumber: userKYC.idNumber,
+            documentUrl: userKYC.documentUrl
+          })
+        });
+      } catch (err) {}
+
       spawnToast('Nộp hồ sơ thành công', 'Hồ sơ KYC đã được gửi lên hệ thống phê duyệt desu~!', 'success');
       renderKYCView();
+      renderAdminDashboard();
     }
 
-    // Support tickets engine desu~
+    // Support ticket GUI rendering
     function renderSupportTickets() {
       const container = document.getElementById('tickets-list-container');
       if (!container) return;
 
       if (tickets.length === 0) {
-        container.innerHTML = `<p class="text-center py-4 text-gray-500 text-xs">Chưa có yêu cầu hỗ trợ nào được tạo.</p>`;
+        container.innerHTML = `<p class="text-center py-4 text-gray-500 text-xs">Chưa có yêu cầu hỗ trợ nào được tạo trong MySQL database.</p>`;
         return;
       }
 
@@ -1065,30 +1344,11 @@
       else form.classList.add('hidden');
     }
 
-    function submitTicket(event) {
-      event.preventDefault();
-      const subj = document.getElementById('ticket-input-subj').value;
-      const cat = document.getElementById('ticket-input-cat').value;
-
-      const newTkt = {
-        id: 'TKT-' + (Math.floor(Math.random() * 8999) + 1000),
-        subject: subj,
-        category: cat,
-        status: 'open'
-      };
-
-      tickets.unshift(newTkt);
-      spawnToast('Gửi ticket thành công', 'Yêu cầu của Sếp đã được gửi đến ban quản trị desu~!', 'success');
-      toggleTicketForm(false);
-      renderSupportTickets();
-    }
-
-    // Admin Dashboard operations desu~
+    // Admin Dashboard Rendering
     function renderAdminDashboard() {
       const kycTbody = document.getElementById('admin-kyc-tbody');
       const ticketTbody = document.getElementById('admin-tickets-tbody');
 
-      // Admin KYC approve panel
       if (kycTbody) {
         if (userKYC.status !== 'pending') {
           kycTbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-gray-500">Không có yêu cầu duyệt danh tính nào.</td></tr>`;
@@ -1107,7 +1367,6 @@
         }
       }
 
-      // Admin Tickets control panel
       if (ticketTbody) {
         if (tickets.length === 0) {
           ticketTbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-gray-500">Không có ticket nào cần xử lý.</td></tr>`;
@@ -1125,7 +1384,7 @@
                 <span class="px-2 py-0.5 rounded text-[10px] font-bold ${t.status === 'open' ? 'bg-success/10 text-success' : 'bg-gray-700 text-gray-400'}">${t.status}</span>
               </td>
               <td class="px-4 py-2.5 text-right">
-                ${t.status === 'open' ? `<button onclick="resolveTicket('${t.id}')" class="bg-primary text-bg px-2.5 py-1 rounded font-bold hover:opacity-90">Giải Quyết</button>` : `<span class="text-gray-500">Đã xử lý</span>`}
+                ${t.status === 'open' ? `<button onclick="resolveTicket('${t.id.replace('TKT-', '')}')" class="bg-primary text-bg px-2.5 py-1 rounded font-bold hover:opacity-90">Giải Quyết</button>` : `<span class="text-gray-500">Đã xử lý</span>`}
               </td>
             </tr>
           `;
@@ -1145,11 +1404,12 @@
       renderAdminDashboard();
     }
 
-    function resolveTicket(id) {
-      const ticket = tickets.find(t => t.id === id);
+    async function resolveTicket(id) {
+      // In standalone we just flag, in fullstack we can normally update DB
+      const ticket = tickets.find(t => t.id === `TKT-${id}`);
       if (ticket) {
         ticket.status = 'resolved';
-        spawnToast('Giải quyết Ticket', `Đã xử lý thành công ticket ${id}!`, 'success');
+        spawnToast('Giải quyết Ticket', `Đã xử lý thành công ticket TKT-${id}!`, 'success');
       }
       renderAdminDashboard();
     }
@@ -1169,12 +1429,20 @@
     }
 
     // Startup Initializations
-    window.onload = () => {
+    window.onload = async () => {
       lucide.createIcons();
       switchView('landing');
-      initMarquee();
+      
+      // Load MySQL Coins Database first
+      await loadCoinsDatabase();
+      
+      // Load WebSockets Live Price updates
+      initWebSockets();
+
+      // Load initial Tickets
+      await loadTicketsDatabase();
+
       renderOrderBookDepth();
-      setupPairSelector();
       renderSidebarWallets();
     };
   </script>
