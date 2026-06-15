@@ -1,7 +1,7 @@
 -- ==========================================
 -- 🪙 VELOTRADE COMMERCIAL CRYPTO PLATFORM SCHEMA
 -- Fully-featured Multi-tier Database (MySQL 8.0+)
--- Designed with 💖 by Grace for Sếp Thiên Ân
+-- Designed by Thiên Ân
 -- Supporting: Admin Portal, Client Portal, and 20+ Hot Coin Pages
 -- ==========================================
 
