@@ -66,7 +66,53 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// 2. Get all coins from the MySQL database
+// 2. User Registration (Signup)
+app.post('/api/auth/register', async (req, res) => {
+  const { email, password, fullName } = req.body;
+  try {
+    // Check if user already exists
+    const [existing]: any = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
+    if (existing.length > 0) {
+      return res.status(400).json({ success: false, message: 'Email này đã được đăng ký trên hệ thống desu~!' });
+    }
+
+    // Insert new customer user (default role is customer for security)
+    const [result]: any = await pool.query(
+      'INSERT INTO users (email, password_hash, full_name, role, kyc_status) VALUES (?, ?, ?, "customer", "unverified")',
+      [email, password, fullName]
+    );
+    const userId = result.insertId;
+
+    // Automatically provision empty wallets (BTC, ETH, SOL, USDT) for the new user!
+    const coinsToProvision = ['BTC', 'ETH', 'SOL', 'USDT'];
+    for (const symbol of coinsToProvision) {
+      const [coinRows]: any = await pool.query('SELECT id FROM coins WHERE symbol = ?', [symbol]);
+      if (coinRows.length > 0) {
+        const coinId = coinRows[0].id;
+        await pool.query(
+          'INSERT INTO wallets (user_id, coin_id, balance, locked_balance) VALUES (?, ?, 0.0, 0.0)',
+          [userId, coinId]
+        );
+      }
+    }
+
+    res.json({
+      success: true,
+      message: 'Đăng ký tài khoản thành công desu~!',
+      user: {
+        id: userId,
+        email,
+        fullName,
+        role: 'customer',
+        kycStatus: 'unverified'
+      }
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 3. Get all coins from the MySQL database
 app.get('/api/coins', async (req, res) => {
   try {
     const [rows] = await pool.query('SELECT * FROM coins WHERE is_active = TRUE');
@@ -76,7 +122,7 @@ app.get('/api/coins', async (req, res) => {
   }
 });
 
-// 3. Submit KYC
+// 4. Submit KYC
 app.post('/api/kyc', async (req, res) => {
   const { userId, fullName, idNumber, documentUrl } = req.body;
   try {
@@ -89,7 +135,7 @@ app.post('/api/kyc', async (req, res) => {
   }
 });
 
-// 4. Create Support Ticket
+// 5. Create Support Ticket
 app.post('/api/tickets', async (req, res) => {
   const { userId, subject, category } = req.body;
   try {
@@ -103,7 +149,7 @@ app.post('/api/tickets', async (req, res) => {
   }
 });
 
-// 5. Get Support Tickets
+// 6. Get Support Tickets
 app.get('/api/tickets', async (req, res) => {
   try {
     const [rows] = await pool.query('SELECT * FROM support_tickets ORDER BY id DESC');
@@ -113,7 +159,7 @@ app.get('/api/tickets', async (req, res) => {
   }
 });
 
-// 6. Basic status check
+// 7. Basic status check
 app.get('/status', (req, res) => {
   res.json({
     status: 'online',

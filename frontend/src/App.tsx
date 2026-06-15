@@ -89,6 +89,8 @@ export default function App() {
   const [emailInput, setEmailInput] = useState<string>('');
   const [passwordInput, setPasswordInput] = useState<string>('');
   const [loginLoading, setLoginError] = useState<string>('');
+  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
+  const [fullNameInput, setFullNameInput] = useState<string>('');
 
   const [activeTab, setActiveTab] = useState<'landing' | 'trade' | 'coin' | 'kyc' | 'support' | 'admin'>('landing');
   const [coins, setCoins] = useState<Coin[]>(staticCoinsFallback);
@@ -159,6 +161,32 @@ export default function App() {
     } catch (err) {
       setLoginError('Không thể kết nối đến server Backend desu~!');
       spawnToast('Lỗi Kết Nối Server', 'Vui lòng kiểm tra Server Backend có đang chạy không nhé Sếp!', 'error');
+    }
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginError('');
+
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: emailInput, password: passwordInput, fullName: fullNameInput })
+      });
+      const data = await res.json();
+      if (data.success) {
+        spawnToast('Đăng Ký Thành Công', 'Tài khoản của Sếp đã đăng ký và tạo ví thành công! Vui lòng đăng nhập nha desu~!', 'success');
+        setAuthMode('login');
+        setFullNameInput('');
+        setLoginError('');
+      } else {
+        setLoginError(data.message || 'Lỗi đăng ký tài khoản desu~!');
+        spawnToast('Đăng Ký Thất Bại', data.message || 'Đăng ký không thành công!', 'error');
+      }
+    } catch (err) {
+      setLoginError('Không thể kết nối đến server Backend desu~!');
+      spawnToast('Lỗi Kết Nối Server', 'Đăng ký thất bại do mất kết nối backend!', 'error');
     }
   };
 
@@ -429,63 +457,139 @@ export default function App() {
                 <Activity className="w-6 h-6 text-primary animate-pulse" />
               </div>
             </div>
-            <h1 className="font-display text-2xl font-bold tracking-tight text-white mt-3">Chào mừng Sếp đến VeloTrade</h1>
-            <p className="text-xs text-slate-400">Vui lòng đăng nhập hệ thống sàn giao dịch Web3 cao cấp</p>
+            <h1 className="font-display text-2xl font-bold tracking-tight text-white mt-3">
+              {authMode === 'login' ? 'Chào mừng Sếp đến VeloTrade' : 'Đăng Ký Tài Khoản VeloTrade'}
+            </h1>
+            <p className="text-xs text-slate-400">
+              {authMode === 'login' ? 'Vui lòng đăng nhập hệ thống sàn giao dịch Web3' : 'Tự tạo tài khoản khách hàng mới vào MySQL Database desu~'}
+            </p>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-4">
-            
-            <div className="space-y-1.5">
-              <label className="text-[10px] text-slate-400 uppercase tracking-wider font-mono">Email Đăng Nhập</label>
-              <div className="relative rounded-lg bg-white/5 border border-white/10 px-3.5 py-2.5 flex items-center gap-2 focus-within:border-primary transition-all">
-                <Mail className="w-4 h-4 text-slate-400 shrink-0" />
-                <input 
-                  type="email" 
-                  placeholder="admin@velotrade.com" 
-                  value={emailInput}
-                  onChange={(e) => setEmailInput(e.target.value)}
-                  className="bg-transparent w-full focus:outline-none text-white text-xs" 
-                  required 
-                />
+          {authMode === 'login' ? (
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-[10px] text-slate-400 uppercase tracking-wider font-mono">Email Đăng Nhập</label>
+                <div className="relative rounded-lg bg-white/5 border border-white/10 px-3.5 py-2.5 flex items-center gap-2 focus-within:border-primary transition-all">
+                  <Mail className="w-4 h-4 text-slate-400 shrink-0" />
+                  <input 
+                    type="email" 
+                    placeholder="admin@velotrade.com" 
+                    value={emailInput}
+                    onChange={(e) => setEmailInput(e.target.value)}
+                    className="bg-transparent w-full focus:outline-none text-white text-xs" 
+                    required 
+                  />
+                </div>
               </div>
-            </div>
 
-            <div className="space-y-1.5">
-              <label className="text-[10px] text-slate-400 uppercase tracking-wider font-mono">Mật Khẩu</label>
-              <div className="relative rounded-lg bg-white/5 border border-white/10 px-3.5 py-2.5 flex items-center gap-2 focus-within:border-primary transition-all">
-                <Lock className="w-4 h-4 text-slate-400 shrink-0" />
-                <input 
-                  type="password" 
-                  placeholder="••••••••" 
-                  value={passwordInput}
-                  onChange={(e) => setPasswordInput(e.target.value)}
-                  className="bg-transparent w-full focus:outline-none text-white text-xs" 
-                  required 
-                />
+              <div className="space-y-1.5">
+                <label className="text-[10px] text-slate-400 uppercase tracking-wider font-mono">Mật Khẩu</label>
+                <div className="relative rounded-lg bg-white/5 border border-white/10 px-3.5 py-2.5 flex items-center gap-2 focus-within:border-primary transition-all">
+                  <Lock className="w-4 h-4 text-slate-400 shrink-0" />
+                  <input 
+                    type="password" 
+                    placeholder="••••••••" 
+                    value={passwordInput}
+                    onChange={(e) => setPasswordInput(e.target.value)}
+                    className="bg-transparent w-full focus:outline-none text-white text-xs" 
+                    required 
+                  />
+                </div>
               </div>
-            </div>
 
-            {loginLoading && (
-              <p className="text-xs text-danger font-mono text-center">{loginLoading}</p>
-            )}
+              {loginLoading && (
+                <p className="text-xs text-danger font-mono text-center">{loginLoading}</p>
+              )}
 
-            <button type="submit" className="w-full bg-gradient-to-r from-primary to-secondary text-white font-bold font-display py-3 rounded-lg hover:opacity-95 transition-all text-xs shadow-lg shadow-primary/10">
-              ĐĂNG NHẬP HỆ THỐNG
-            </button>
-          </form>
+              <button type="submit" className="w-full bg-gradient-to-r from-primary to-secondary text-white font-bold font-display py-3 rounded-lg hover:opacity-95 transition-all text-xs shadow-lg shadow-primary/10">
+                ĐĂNG NHẬP HỆ THỐNG
+              </button>
+
+              <p className="text-center text-xs text-slate-400">
+                Chưa có tài khoản?{' '}
+                <span onClick={() => { setAuthMode('register'); setLoginError(''); }} className="text-primary hover:underline cursor-pointer font-bold">
+                  Đăng ký ngay desu~!
+                </span>
+              </p>
+            </form>
+          ) : (
+            <form onSubmit={handleRegister} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-[10px] text-slate-400 uppercase tracking-wider font-mono">Họ và Tên</label>
+                <div className="relative rounded-lg bg-white/5 border border-white/10 px-3.5 py-2.5 flex items-center gap-2 focus-within:border-primary transition-all">
+                  <UserIcon className="w-4 h-4 text-slate-400 shrink-0" />
+                  <input 
+                    type="text" 
+                    placeholder="Nguyễn Văn A" 
+                    value={fullNameInput}
+                    onChange={(e) => setFullNameInput(e.target.value)}
+                    className="bg-transparent w-full focus:outline-none text-white text-xs" 
+                    required 
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] text-slate-400 uppercase tracking-wider font-mono">Email Đăng Ký</label>
+                <div className="relative rounded-lg bg-white/5 border border-white/10 px-3.5 py-2.5 flex items-center gap-2 focus-within:border-primary transition-all">
+                  <Mail className="w-4 h-4 text-slate-400 shrink-0" />
+                  <input 
+                    type="email" 
+                    placeholder="user@example.com" 
+                    value={emailInput}
+                    onChange={(e) => setEmailInput(e.target.value)}
+                    className="bg-transparent w-full focus:outline-none text-white text-xs" 
+                    required 
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] text-slate-400 uppercase tracking-wider font-mono">Mật Khẩu</label>
+                <div className="relative rounded-lg bg-white/5 border border-white/10 px-3.5 py-2.5 flex items-center gap-2 focus-within:border-primary transition-all">
+                  <Lock className="w-4 h-4 text-slate-400 shrink-0" />
+                  <input 
+                    type="password" 
+                    placeholder="••••••••" 
+                    value={passwordInput}
+                    onChange={(e) => setPasswordInput(e.target.value)}
+                    className="bg-transparent w-full focus:outline-none text-white text-xs" 
+                    required 
+                  />
+                </div>
+              </div>
+
+              {loginLoading && (
+                <p className="text-xs text-danger font-mono text-center">{loginLoading}</p>
+              )}
+
+              <button type="submit" className="w-full bg-gradient-to-r from-primary to-secondary text-white font-bold font-display py-3 rounded-lg hover:opacity-95 transition-all text-xs shadow-lg shadow-primary/10">
+                ĐĂNG KÝ KHÁCH HÀNG MỚI
+              </button>
+
+              <p className="text-center text-xs text-slate-400">
+                Đã có tài khoản?{' '}
+                <span onClick={() => { setAuthMode('login'); setLoginError(''); }} className="text-primary hover:underline cursor-pointer font-bold">
+                  Đăng nhập ngay desu~!
+                </span>
+              </p>
+            </form>
+          )}
 
           {/* Seed accounts quick reference box for Sếp desu~! */}
-          <div className="bg-white/5 border border-white/5 rounded-xl p-3 space-y-2 font-mono text-[11px] text-slate-400">
-            <p className="font-bold text-slate-200">📌 Tài Khoản Thử Nghiệm Từ MySQL Seed:</p>
-            <div className="flex justify-between border-b border-white/5 pb-1">
-              <span>🧑‍💼 ADMIN:</span>
-              <span className="text-primary hover:underline cursor-pointer" onClick={() => { setEmailInput('admin@velotrade.com'); setPasswordInput('admin123'); }}>admin@velotrade.com / admin123</span>
+          {authMode === 'login' && (
+            <div className="bg-white/5 border border-white/5 rounded-xl p-3 space-y-2 font-mono text-[11px] text-slate-400">
+              <p className="font-bold text-slate-200">📌 Tài Khoản Thử Nghiệm Từ MySQL Seed:</p>
+              <div className="flex justify-between border-b border-white/5 pb-1">
+                <span>🧑‍💼 ADMIN:</span>
+                <span className="text-primary hover:underline cursor-pointer" onClick={() => { setEmailInput('admin@velotrade.com'); setPasswordInput('admin123'); }}>admin@velotrade.com / admin123</span>
+              </div>
+              <div className="flex justify-between">
+                <span>👤 CUSTOMER:</span>
+                <span className="text-secondary hover:underline cursor-pointer" onClick={() => { setEmailInput('customer@velotrade.com'); setPasswordInput('customer123'); }}>customer@velotrade.com / customer123</span>
+              </div>
             </div>
-            <div className="flex justify-between">
-              <span>👤 CUSTOMER:</span>
-              <span className="text-secondary hover:underline cursor-pointer" onClick={() => { setEmailInput('customer@velotrade.com'); setPasswordInput('customer123'); }}>customer@velotrade.com / customer123</span>
-            </div>
-          </div>
+          )}
 
         </div>
       </div>
