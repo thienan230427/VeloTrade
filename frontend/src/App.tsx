@@ -8,7 +8,6 @@ import {
   ShieldCheck, 
   HelpCircle, 
   Sliders, 
-  ArrowRight, 
   Sparkles, 
   TrendingUp, 
   Terminal, 
@@ -21,7 +20,11 @@ import {
   Clock, 
   AlertTriangle,
   ExternalLink,
-  FileText
+  FileText,
+  Lock,
+  Mail,
+  LogOut,
+  User as UserIcon
 } from 'lucide-react';
 
 // Types
@@ -39,11 +42,12 @@ interface Coin {
   desc: string;
 }
 
-interface KYC {
-  name: string;
-  idNumber: string;
-  documentUrl: string;
-  status: 'unverified' | 'pending' | 'verified';
+interface User {
+  id: number;
+  email: string;
+  fullName: string;
+  role: 'customer' | 'admin';
+  kycStatus: 'unverified' | 'pending' | 'verified' | 'rejected';
 }
 
 interface Ticket {
@@ -80,6 +84,12 @@ const staticCoinsFallback: Coin[] = [
 ];
 
 export default function App() {
+  // Authentication & Session state
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [emailInput, setEmailInput] = useState<string>('');
+  const [passwordInput, setPasswordInput] = useState<string>('');
+  const [loginLoading, setLoginError] = useState<string>('');
+
   const [activeTab, setActiveTab] = useState<'landing' | 'trade' | 'coin' | 'kyc' | 'support' | 'admin'>('landing');
   const [coins, setCoins] = useState<Coin[]>(staticCoinsFallback);
   const [activeCoinId, setActiveCoinId] = useState<number>(1);
@@ -95,7 +105,7 @@ export default function App() {
   const [tradingFeeReduction, setTradingFeeReduction] = useState<number>(0);
   
   // KYC states
-  const [kycForm, setKycForm] = useState<KYC>({ name: '', idNumber: '', documentUrl: 'https://example.com/cccd.png', status: 'unverified' });
+  const [kycForm, setKycForm] = useState({ name: '', idNumber: '', documentUrl: 'https://example.com/cccd.png' });
   
   // Tickets states
   const [ticketsList, setTicketsList] = useState<Ticket[]>([]);
@@ -120,6 +130,47 @@ export default function App() {
     }, 4000);
   };
 
+  // Perform API login
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginError('');
+
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: emailInput, password: passwordInput })
+      });
+      const data = await res.json();
+      if (data.success && data.user) {
+        setCurrentUser(data.user);
+        spawnToast('Đăng Nhập Thành Công', `Chào mừng ${data.user.fullName} đã quay trở lại desu~! ヽ(>∀<☆)ノ`, 'success');
+        
+        // Dynamic redirection logic: Admin to operations desk, Customer to landing page desu~
+        if (data.user.role === 'admin') {
+          setActiveTab('admin');
+        } else {
+          setActiveTab('landing');
+        }
+      } else {
+        setLoginError(data.message || 'Mật khẩu hoặc tài khoản sai desu~!');
+        spawnToast('Đăng Nhập Thất Bại', data.message || 'Sai thông tin tài khoản!', 'error');
+      }
+    } catch (err) {
+      setLoginError('Không thể kết nối đến server Backend desu~!');
+      spawnToast('Lỗi Kết Nối Server', 'Vui lòng kiểm tra Server Backend có đang chạy không nhé Sếp!', 'error');
+    }
+  };
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    setEmailInput('');
+    setPasswordInput('');
+    setLoginError('');
+    setActiveTab('landing');
+    spawnToast('Đăng Xuất Thành Công', 'Đã đăng xuất tài khoản VeloTrade desu~! 👋', 'success');
+  };
+
   // Fetch coins from MySQL API on mount
   useEffect(() => {
     async function loadCoins() {
@@ -142,7 +193,6 @@ export default function App() {
           }));
           setCoins(mapped);
           setActiveCoinId(mapped[0].id);
-          spawnToast('Kết Nối MySQL Database', `Đã đồng bộ thành công ${mapped.length} đồng coin từ cơ sở dữ liệu!`, 'success');
         }
       } catch (err) {
         console.warn('API coins offline. Using fallback static seeds.');
@@ -170,8 +220,10 @@ export default function App() {
   };
 
   useEffect(() => {
-    loadTickets();
-  }, [activeTab]);
+    if (currentUser) {
+      loadTickets();
+    }
+  }, [activeTab, currentUser]);
 
   // Connect to WebSockets Server
   useEffect(() => {
@@ -183,7 +235,6 @@ export default function App() {
 
       socket.on('connect', () => {
         setWsConnected(true);
-        spawnToast('WebSockets connected', 'Đã thiết lập kết nối thời gian thực với server Node.js!', 'success');
       });
 
       socket.on('price_update', (data: any[]) => {
@@ -214,7 +265,6 @@ export default function App() {
       setWsConnected(false);
     }
 
-    // Fallback simulation interval if WS server goes offline
     fallbackInterval = setInterval(() => {
       setLivePrices(prev => {
         const next = { ...prev };
@@ -240,7 +290,7 @@ export default function App() {
     if (currentType === 'limit') {
       setTradePrice(price.toString());
     }
-  }, [currentPair, currentType]);
+  }, [currentPair, currentType, livePrices]);
 
   const activeCoin = coins.find(c => c.id === activeCoinId) || coins[0];
   const activePairSymbol = currentPair.split('_')[0];
@@ -288,13 +338,13 @@ export default function App() {
   // Submit support ticket
   const handleSubmitTicket = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!ticketSubject.trim()) return;
+    if (!ticketSubject.trim() || !currentUser) return;
 
     try {
       const res = await fetch(`${BACKEND_URL}/api/tickets`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: 1, subject: ticketSubject, category: ticketCategory })
+        body: JSON.stringify({ userId: currentUser.id, subject: ticketSubject, category: ticketCategory })
       });
       const data = await res.json();
       if (data.success) {
@@ -304,7 +354,6 @@ export default function App() {
         loadTickets();
       }
     } catch (err) {
-      // Local fallback
       const localTicket: Ticket = {
         id: `TKT-${Math.floor(Math.random() * 8999) + 1000}`,
         subject: ticketSubject,
@@ -326,15 +375,15 @@ export default function App() {
   // Submit KYC
   const handleSubmitKYC = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!kycForm.name.trim() || !kycForm.idNumber.trim()) return;
+    if (!kycForm.name.trim() || !kycForm.idNumber.trim() || !currentUser) return;
 
-    setKycForm(prev => ({ ...prev, status: 'pending' }));
+    setCurrentUser(prev => prev ? { ...prev, kycStatus: 'pending' } : null);
     try {
       await fetch(`${BACKEND_URL}/api/kyc`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId: 1,
+          userId: currentUser.id,
           fullName: kycForm.name,
           idNumber: kycForm.idNumber,
           documentUrl: kycForm.documentUrl
@@ -344,7 +393,6 @@ export default function App() {
     spawnToast('Nộp Hồ Sơ KYC', 'Hồ sơ của Sếp đã nộp thành công và đang chờ Admin duyệt!', 'success');
   };
 
-  // Render Order Book data rows
   const getAsksAndBids = () => {
     const asks = [];
     const bids = [];
@@ -365,6 +413,86 @@ export default function App() {
 
   const { asks, bids } = getAsksAndBids();
 
+  // RENDER LOGIN SCREEN IF NO USER IS LOGGED IN desu~!
+  if (!currentUser) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-bg text-slate-200 overflow-hidden font-sans relative">
+        {/* Neon blur shapes */}
+        <div className="absolute w-[400px] h-[400px] rounded-full bg-primary/10 blur-[120px] top-10 left-10"></div>
+        <div className="absolute w-[400px] h-[400px] rounded-full bg-secondary/10 blur-[120px] bottom-10 right-10"></div>
+        
+        <div className="w-[450px] glass-panel rounded-2xl p-8 border border-white/5 space-y-6 shadow-2xl relative z-10">
+          
+          <div className="text-center space-y-2">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-secondary to-primary flex items-center justify-center p-[1px] mx-auto shadow-lg shadow-primary/20">
+              <div className="w-full h-full bg-bg rounded-[15px] flex items-center justify-center">
+                <Activity className="w-6 h-6 text-primary animate-pulse" />
+              </div>
+            </div>
+            <h1 className="font-display text-2xl font-bold tracking-tight text-white mt-3">Chào mừng Sếp đến VeloTrade</h1>
+            <p className="text-xs text-slate-400">Vui lòng đăng nhập hệ thống sàn giao dịch Web3 cao cấp</p>
+          </div>
+
+          <form onSubmit={handleLogin} className="space-y-4">
+            
+            <div className="space-y-1.5">
+              <label className="text-[10px] text-slate-400 uppercase tracking-wider font-mono">Email Đăng Nhập</label>
+              <div className="relative rounded-lg bg-white/5 border border-white/10 px-3.5 py-2.5 flex items-center gap-2 focus-within:border-primary transition-all">
+                <Mail className="w-4 h-4 text-slate-400 shrink-0" />
+                <input 
+                  type="email" 
+                  placeholder="admin@velotrade.com" 
+                  value={emailInput}
+                  onChange={(e) => setEmailInput(e.target.value)}
+                  className="bg-transparent w-full focus:outline-none text-white text-xs" 
+                  required 
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-[10px] text-slate-400 uppercase tracking-wider font-mono">Mật Khẩu</label>
+              <div className="relative rounded-lg bg-white/5 border border-white/10 px-3.5 py-2.5 flex items-center gap-2 focus-within:border-primary transition-all">
+                <Lock className="w-4 h-4 text-slate-400 shrink-0" />
+                <input 
+                  type="password" 
+                  placeholder="••••••••" 
+                  value={passwordInput}
+                  onChange={(e) => setPasswordInput(e.target.value)}
+                  className="bg-transparent w-full focus:outline-none text-white text-xs" 
+                  required 
+                />
+              </div>
+            </div>
+
+            {loginLoading && (
+              <p className="text-xs text-danger font-mono text-center">{loginLoading}</p>
+            )}
+
+            <button type="submit" className="w-full bg-gradient-to-r from-primary to-secondary text-white font-bold font-display py-3 rounded-lg hover:opacity-95 transition-all text-xs shadow-lg shadow-primary/10">
+              ĐĂNG NHẬP HỆ THỐNG
+            </button>
+          </form>
+
+          {/* Seed accounts quick reference box for Sếp desu~! */}
+          <div className="bg-white/5 border border-white/5 rounded-xl p-3 space-y-2 font-mono text-[11px] text-slate-400">
+            <p className="font-bold text-slate-200">📌 Tài Khoản Thử Nghiệm Từ MySQL Seed:</p>
+            <div className="flex justify-between border-b border-white/5 pb-1">
+              <span>🧑‍💼 ADMIN:</span>
+              <span className="text-primary hover:underline cursor-pointer" onClick={() => { setEmailInput('admin@velotrade.com'); setPasswordInput('admin123'); }}>admin@velotrade.com / admin123</span>
+            </div>
+            <div className="flex justify-between">
+              <span>👤 CUSTOMER:</span>
+              <span className="text-secondary hover:underline cursor-pointer" onClick={() => { setEmailInput('customer@velotrade.com'); setPasswordInput('customer123'); }}>customer@velotrade.com / customer123</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    );
+  }
+
+  // STANDARD AUTHENTICATED SYSTEM LAYOUT desu~!
   return (
     <div className="h-screen flex flex-col overflow-hidden text-sm bg-bg text-slate-200">
       
@@ -392,12 +520,12 @@ export default function App() {
                   <Activity className="w-4 h-4 text-primary animate-pulse" />
                 </div>
               </div>
-              <span className="font-display text-lg font-bold text-white tracking-tight">Velo<span className="text-primary">Trade</span></span>
+              <span className="font-display text-lg font-bold text-white tracking-tight">VeloTrade</span>
             </div>
             
             <div className={`hidden md:flex items-center gap-2 px-3 py-1 border rounded-full text-[11px] ${wsConnected ? 'bg-success/10 border-success/15 text-success' : 'bg-amber-500/10 border-amber-500/15 text-amber-500'}`}>
               <span className={`w-1.5 h-1.5 rounded-full ${wsConnected ? 'bg-success animate-ping' : 'bg-amber-500'}`}></span>
-              <span>{wsConnected ? 'WebSockets Online V4.5' : 'MySQL Database Loaded'}</span>
+              <span>{wsConnected ? 'WebSockets Live' : 'Database Connection Established'}</span>
               <span className="text-white/20">|</span>
               <span className="font-mono text-white/80">{wsConnected ? '1.8 ms' : 'Standalone Fallback'}</span>
             </div>
@@ -411,7 +539,7 @@ export default function App() {
               <CandlestickChart className="w-3.5 h-3.5" /> Sàn Giao Dịch
             </button>
             <button onClick={() => setActiveTab('coin')} className={`px-4 py-1.5 text-xs font-medium rounded-lg transition-all flex items-center gap-1.5 ${activeTab === 'coin' ? 'text-primary bg-white/5 font-bold' : 'text-slate-400 hover:text-white'}`}>
-              <Coins className="w-3.5 h-3.5" /> Chi Tiết Coin (21 Coin)
+              <Coins className="w-3.5 h-3.5" /> Chi Tiết Coin
             </button>
             <button onClick={() => setActiveTab('kyc')} className={`px-4 py-1.5 text-xs font-medium rounded-lg transition-all flex items-center gap-1.5 ${activeTab === 'kyc' ? 'text-primary bg-white/5 font-bold' : 'text-slate-400 hover:text-white'}`}>
               <ShieldCheck className="w-3.5 h-3.5" /> Xác Thực KYC
@@ -419,19 +547,30 @@ export default function App() {
             <button onClick={() => setActiveTab('support')} className={`px-4 py-1.5 text-xs font-medium rounded-lg transition-all flex items-center gap-1.5 ${activeTab === 'support' ? 'text-primary bg-white/5 font-bold' : 'text-slate-400 hover:text-white'}`}>
               <HelpCircle className="w-3.5 h-3.5" /> Trợ Giúp
             </button>
-            <button onClick={() => setActiveTab('admin')} className={`px-4 py-1.5 text-xs font-medium rounded-lg transition-all flex items-center gap-1.5 ${activeTab === 'admin' ? 'text-primary bg-white/5 font-bold' : 'text-slate-400 hover:text-white'}`}>
-              <Sliders className="w-3.5 h-3.5" /> Admin Operations
-            </button>
+            
+            {/* SECURED ADMIN TAB: ONLY visible to users with 'admin' role! desu~ */}
+            {currentUser.role === 'admin' && (
+              <button onClick={() => setActiveTab('admin')} className={`px-4 py-1.5 text-xs font-medium rounded-lg transition-all flex items-center gap-1.5 ${activeTab === 'admin' ? 'text-primary bg-white/5 font-bold' : 'text-slate-400 hover:text-white'}`}>
+                <Sliders className="w-3.5 h-3.5" /> Admin Operations
+              </button>
+            )}
           </nav>
 
           <div className="flex items-center gap-4">
-            <div className="hidden sm:flex flex-col items-end font-mono">
-              <span className="text-[9px] text-slate-400 uppercase tracking-wider">Ví Tài Khoản</span>
-              <span className="text-sm font-bold text-primary">$142,580.40</span>
+            {/* Logged in User info display desu~ */}
+            <div className="flex items-center gap-2 border-r border-white/10 pr-4">
+              <div className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-primary border border-white/10">
+                <UserIcon className="w-3.5 h-3.5" />
+              </div>
+              <div className="text-left font-mono">
+                <span className="text-[10px] font-bold text-white block leading-tight">{currentUser.fullName}</span>
+                <span className="text-[8px] text-slate-400 block uppercase tracking-widest">{currentUser.role}</span>
+              </div>
             </div>
-            <button onClick={() => setActiveTab('trade')} className="bg-gradient-to-r from-primary to-secondary text-white font-medium text-xs px-4 py-2 rounded-lg transition-all flex items-center gap-1.5">
-              <span>Giao Dịch Ngay</span>
-              <ArrowRight className="w-3.5 h-3.5" />
+
+            <button onClick={handleLogout} className="bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white font-medium text-xs px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 border border-white/5">
+              <LogOut className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Đăng Xuất</span>
             </button>
           </div>
 
@@ -494,7 +633,6 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Fixed Logo size layout bug here! */}
                 <div className="lg:col-span-5 relative">
                   <div className="relative glass-panel rounded-xl p-5 border border-white/5 space-y-4">
                     <div className="flex items-center justify-between">
@@ -863,7 +1001,7 @@ export default function App() {
                 <p className="text-xs text-slate-400">Vui lòng hoàn tất xác thực danh tính để kích hoạt tài khoản giao dịch đầy đủ.</p>
               </div>
 
-              {kycForm.status === 'verified' && (
+              {currentUser.kycStatus === 'verified' && (
                 <div className="bg-success/10 border border-success/20 rounded-lg p-5 text-center space-y-2">
                   <CheckCircle className="w-10 h-10 text-success mx-auto" />
                   <h3 className="text-sm font-bold text-success">Yêu Cầu KYC Của Sếp Đã Được Duyệt!</h3>
@@ -871,7 +1009,7 @@ export default function App() {
                 </div>
               )}
 
-              {kycForm.status === 'pending' && (
+              {currentUser.kycStatus === 'pending' && (
                 <div className="bg-primary/10 border border-primary/20 rounded-lg p-5 text-center space-y-2">
                   <Clock className="w-10 h-10 text-primary mx-auto animate-spin" />
                   <h3 className="text-sm font-bold text-primary">Đang Chờ Admin Phê Duyệt</h3>
@@ -879,7 +1017,7 @@ export default function App() {
                 </div>
               )}
 
-              {kycForm.status === 'unverified' && (
+              {currentUser.kycStatus === 'unverified' && (
                 <form onSubmit={handleSubmitKYC} className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
@@ -971,7 +1109,7 @@ export default function App() {
         )}
 
         {/* 6. ADMIN OPERATIONS VIEW */}
-        {activeTab === 'admin' && (
+        {activeTab === 'admin' && currentUser.role === 'admin' && (
           <div className="h-full overflow-y-auto px-6 py-8">
             <div className="max-w-[1400px] mx-auto space-y-6">
               
@@ -1016,7 +1154,7 @@ export default function App() {
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-white/5">
-                          {kycForm.status !== 'pending' ? (
+                          {currentUser.kycStatus !== 'pending' ? (
                             <tr><td colSpan={4} className="text-center py-4 text-slate-500">Không có yêu cầu duyệt danh tính nào.</td></tr>
                           ) : (
                             <tr className="hover:bg-white/5 transition-all">
@@ -1024,8 +1162,8 @@ export default function App() {
                               <td className="px-4 py-2.5">{kycForm.idNumber}</td>
                               <td className="px-4 py-2.5 text-primary hover:underline cursor-pointer"><a href={kycForm.documentUrl} target="_blank" rel="noreferrer">Xem ảnh CCCD</a></td>
                               <td className="px-4 py-2.5 text-right flex gap-2 justify-end">
-                                <button onClick={() => { setKycForm(prev => ({ ...prev, status: 'verified' })); spawnToast('KYC Phê Duyệt', 'Đã duyệt KYC thành công cho Sếp!', 'success'); }} className="bg-success text-bg px-2.5 py-1 rounded font-bold hover:opacity-90">Duyệt</button>
-                                <button onClick={() => { setKycForm(prev => ({ ...prev, status: 'unverified' })); spawnToast('KYC Từ Chối', 'Đã từ chối KYC thành công!', 'error'); }} className="bg-danger text-white px-2.5 py-1 rounded font-bold hover:opacity-90">Từ chối</button>
+                                <button onClick={() => { setKycForm(prev => ({ ...prev, name: '', idNumber: '' })); setCurrentUser(prev => prev ? { ...prev, kycStatus: 'verified' } : null); spawnToast('KYC Phê Duyệt', 'Đã duyệt KYC thành công cho khách hàng!', 'success'); }} className="bg-success text-bg px-2.5 py-1 rounded font-bold hover:opacity-90">Duyệt</button>
+                                <button onClick={() => { setKycForm(prev => ({ ...prev, name: '', idNumber: '' })); setCurrentUser(prev => prev ? { ...prev, kycStatus: 'unverified' } : null); spawnToast('KYC Từ Chối', 'Đã từ chối KYC thành công!', 'error'); }} className="bg-danger text-white px-2.5 py-1 rounded font-bold hover:opacity-90">Từ chối</button>
                               </td>
                             </tr>
                           )}

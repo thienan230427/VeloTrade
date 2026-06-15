@@ -38,7 +38,35 @@ async function initDatabase() {
 
 // REST APIs
 
-// 1. Get all coins from the MySQL database
+// 1. User Authentication (Login)
+app.post('/api/auth/login', async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    const [rows]: any = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
+    if (rows.length === 0) {
+      return res.status(401).json({ success: false, message: 'Email không tồn tại trên hệ thống desu~!' });
+    }
+    const user = rows[0];
+    if (user.password_hash !== password) {
+      return res.status(401).json({ success: false, message: 'Mật khẩu không chính xác desu~!' });
+    }
+    
+    res.json({
+      success: true,
+      user: {
+        id: user.id,
+        email: user.email,
+        fullName: user.full_name,
+        role: user.role,
+        kycStatus: user.kyc_status
+      }
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 2. Get all coins from the MySQL database
 app.get('/api/coins', async (req, res) => {
   try {
     const [rows] = await pool.query('SELECT * FROM coins WHERE is_active = TRUE');
@@ -48,18 +76,20 @@ app.get('/api/coins', async (req, res) => {
   }
 });
 
-// 2. Submit KYC
+// 3. Submit KYC
 app.post('/api/kyc', async (req, res) => {
   const { userId, fullName, idNumber, documentUrl } = req.body;
   try {
-    console.log(`[KYC SUBMIT] User ${fullName} with ID ${idNumber} submitted documents.`);
+    console.log(`[KYC SUBMIT] User ${fullName} (ID: ${userId}) with ID ${idNumber} submitted documents.`);
+    // Update user's KYC status in the database to pending
+    await pool.query('UPDATE users SET kyc_status = "pending", full_name = ? WHERE id = ?', [fullName, userId]);
     res.json({ success: true, message: 'KYC submitted successfully!' });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// 3. Create Support Ticket
+// 4. Create Support Ticket
 app.post('/api/tickets', async (req, res) => {
   const { userId, subject, category } = req.body;
   try {
@@ -73,7 +103,7 @@ app.post('/api/tickets', async (req, res) => {
   }
 });
 
-// 4. Get Support Tickets
+// 5. Get Support Tickets
 app.get('/api/tickets', async (req, res) => {
   try {
     const [rows] = await pool.query('SELECT * FROM support_tickets ORDER BY id DESC');
@@ -83,12 +113,12 @@ app.get('/api/tickets', async (req, res) => {
   }
 });
 
-// 5. Basic status check
+// 6. Basic status check
 app.get('/status', (req, res) => {
   res.json({
     status: 'online',
     platform: 'VeloTrade',
-    version: '1.0.0',
+    version: '1.1.0',
     developer: 'Sếp Thiên Ân & Grace',
     databaseConnected: !!pool
   });
@@ -159,7 +189,7 @@ const PORT = 4000;
 httpServer.listen(PORT, async () => {
   await initDatabase();
   console.log(`====================================================`);
-  console.log(`🚀 VeloTrade Full-Stack Server is running beautifully on:`);
+  console.log(`🚀 VeloTrade Full-Stack Server v1.1 is running on:`);
   console.log(`   http://localhost:${PORT}`);
   console.log(`====================================================`);
 });
