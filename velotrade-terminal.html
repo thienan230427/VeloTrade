@@ -1,0 +1,1185 @@
+<!doctype html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VeloTrade | Premium Advanced Crypto Terminal</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            bg: '#080B11',
+            surface: '#111622',
+            surfaceLighter: '#1A2132',
+            primary: '#00C2FF',
+            secondary: '#7B61FF',
+            success: '#00D26A',
+            danger: '#FF4D6D',
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Space Grotesk', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #080B11;
+      color: #E2E8F0;
+    }
+    .custom-scroll::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.01);
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 4px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb:hover {
+      background: rgba(0, 194, 255, 0.3);
+    }
+    .glass-panel {
+      background: rgba(17, 22, 34, 0.75);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+    }
+    @keyframes marquee {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    .animate-marquee {
+      animation: marquee 35s linear infinite;
+    }
+  </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden text-sm">
+
+  <!-- Toast Notification Wrapper -->
+  <div id="toast-container" class="fixed top-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- Header -->
+  <header class="glass-panel shrink-0 border-b border-white/5 px-6 py-3 z-40">
+    <div class="max-w-[1700px] mx-auto flex items-center justify-between">
+      
+      <!-- Brand & Stats -->
+      <div class="flex items-center gap-6">
+        <div onclick="switchView('landing')" class="flex items-center gap-2 cursor-pointer group">
+          <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-secondary to-primary flex items-center justify-center p-[1px]">
+            <div class="w-full h-full bg-bg rounded-[7px] flex items-center justify-center">
+              <i data-lucide="activity" class="w-4 h-4 text-primary animate-pulse"></i>
+            </div>
+          </div>
+          <span class="font-display text-lg font-bold text-white tracking-tight">Velo<span class="text-primary">Trade</span></span>
+        </div>
+        <div class="hidden md:flex items-center gap-2 px-3 py-1 bg-success/10 border border-success/15 rounded-full text-[11px] text-success">
+          <span class="w-1.5 h-1.5 bg-success rounded-full animate-ping"></span>
+          <span>Routing Node V4.5</span>
+          <span class="text-white/20">|</span>
+          <span class="font-mono text-white/80">1.8 ms</span>
+        </div>
+      </div>
+
+      <!-- Navigation Routing -->
+      <nav class="hidden lg:flex items-center gap-1 bg-white/5 p-1 border border-white/5 rounded-xl">
+        <button onclick="switchView('landing')" id="tab-landing" class="nav-btn px-4 py-1.5 text-xs font-medium rounded-lg text-primary bg-white/5 transition-all flex items-center gap-1.5">
+          <i data-lucide="home" class="w-3.5 h-3.5"></i> Home
+        </button>
+        <button onclick="switchView('trade')" id="tab-trade" class="nav-btn px-4 py-1.5 text-xs font-medium rounded-lg text-gray-400 hover:text-white transition-all flex items-center gap-1.5">
+          <i data-lucide="candlestick-chart" class="w-3.5 h-3.5"></i> Sàn Giao Dịch
+        </button>
+        <button onclick="switchView('coin')" id="tab-coin" class="nav-btn px-4 py-1.5 text-xs font-medium rounded-lg text-gray-400 hover:text-white transition-all flex items-center gap-1.5">
+          <i data-lucide="coins" class="w-3.5 h-3.5"></i> Chi Tiết Coin
+        </button>
+        <button onclick="switchView('kyc')" id="tab-kyc" class="nav-btn px-4 py-1.5 text-xs font-medium rounded-lg text-gray-400 hover:text-white transition-all flex items-center gap-1.5">
+          <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Xác Thực KYC
+        </button>
+        <button onclick="switchView('support')" id="tab-support" class="nav-btn px-4 py-1.5 text-xs font-medium rounded-lg text-gray-400 hover:text-white transition-all flex items-center gap-1.5">
+          <i data-lucide="help-circle" class="w-3.5 h-3.5"></i> Trợ Giúp
+        </button>
+        <button onclick="switchView('admin')" id="tab-admin" class="nav-btn px-4 py-1.5 text-xs font-medium rounded-lg text-gray-400 hover:text-white transition-all flex items-center gap-1.5">
+          <i data-lucide="sliders" class="w-3.5 h-3.5"></i> Admin Operations
+        </button>
+      </nav>
+
+      <!-- User Profile/Balance -->
+      <div class="flex items-center gap-4">
+        <div class="hidden sm:flex flex-col items-end font-mono">
+          <span class="text-[9px] text-gray-400 uppercase tracking-wider">Ví Tài Khoản</span>
+          <span id="global-valuation" class="text-sm font-bold text-primary">$142,580.40</span>
+        </div>
+        <button onclick="switchView('trade')" class="bg-gradient-to-r from-primary to-secondary text-white font-medium text-xs px-4 py-2 rounded-lg transition-all flex items-center gap-1.5">
+          <span>Giao Dịch Ngay</span>
+          <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Marquee Ticker -->
+  <section class="bg-surface/85 border-b border-white/5 py-1.5 select-none overflow-hidden shrink-0">
+    <div class="flex w-max animate-marquee">
+      <div id="marquee-stream" class="flex items-center gap-12 text-xs pr-12 font-mono">
+        <!-- Filled programmatically -->
+      </div>
+    </div>
+  </section>
+
+  <!-- Main View Container -->
+  <main class="flex-grow overflow-hidden relative">
+
+    <!-- 1. LANDING/HOME VIEW -->
+    <div id="view-landing" class="view-panel h-full overflow-y-auto px-6 py-8 space-y-8 hidden">
+      <div class="max-w-[1500px] mx-auto space-y-8">
+        
+        <!-- Hero section -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center pt-2">
+          <div class="lg:col-span-7 space-y-4">
+            <div class="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 border border-primary/20 rounded-full text-[10px] text-primary uppercase font-bold tracking-wider">
+              <i data-lucide="sparkles" class="w-3 h-3"></i> HỆ THỐNG GIAO DỊCH HIỆU NĂNG CAO v4.5
+            </div>
+            <h1 class="font-display text-4xl lg:text-6xl font-bold tracking-tight text-white leading-tight">
+              Giao Dịch Crypto <br/>
+              <span class="bg-gradient-to-r from-primary via-secondary to-purple-400 bg-clip-text text-transparent">Hiệu Năng Vượt Trội</span>
+            </h1>
+            <p class="text-gray-400 text-sm max-w-lg leading-relaxed">
+              Trải nghiệm độ trễ khớp lệnh cực thấp, tính thanh khoản sâu sắc cùng các công cụ quản lý rủi ro tiên tiến đạt tiêu chuẩn toàn cầu do Sếp Thiên Ân & Grace phát triển.
+            </p>
+            <div class="flex flex-wrap gap-3 pt-2">
+              <button onclick="switchView('trade')" class="bg-primary hover:bg-primary/95 text-bg font-bold px-5 py-3 rounded-lg transition-all flex items-center gap-2">
+                <span>Vào Sàn Giao Dịch Chuyên Nghiệp</span>
+                <i data-lucide="terminal" class="w-4 h-4"></i>
+              </button>
+              <button onclick="switchView('coin')" class="glass-panel hover:bg-white/5 text-white font-medium px-5 py-3 rounded-lg transition-all flex items-center gap-2">
+                <span>Xem Thông Tin Thị Trường</span>
+                <i data-lucide="trending-up" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="lg:col-span-5 relative">
+            <div class="relative glass-panel rounded-xl p-5 border border-white/5 space-y-4">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-gray-400 tracking-wider">LIVE COIN RATES</span>
+                <span class="flex items-center gap-1 text-xs text-success font-medium">
+                  <span class="w-1.5 h-1.5 bg-success rounded-full animate-ping"></span>
+                  <span>System Live</span>
+                </span>
+              </div>
+              <div class="space-y-2.5" id="landing-hero-coin-preview-list">
+                <!-- Programmatic list -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Coins table -->
+        <section class="space-y-4">
+          <div>
+            <h2 class="text-lg font-bold font-display text-white">Xu Hướng Tài Sản Thị Trường</h2>
+            <p class="text-xs text-gray-400 mt-0.5">Cập nhật chỉ số thanh khoản thực tế từ luồng dữ liệu hệ thống.</p>
+          </div>
+          <div class="overflow-x-auto rounded-xl border border-white/5 bg-surface/40">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b border-white/5 text-[10px] text-gray-400 uppercase tracking-wider font-mono">
+                  <th class="px-6 py-3">Tên Tài Sản</th>
+                  <th class="px-6 py-3">Giá Hiện Tại</th>
+                  <th class="px-6 py-3">Thay Đổi 24h</th>
+                  <th class="px-6 py-3">Thể Loại</th>
+                  <th class="px-6 py-3 text-right">Hành Động</th>
+                </tr>
+              </thead>
+              <tbody id="landing-featured-tbody" class="divide-y divide-white/5 text-sm font-mono"></tbody>
+            </table>
+          </div>
+        </section>
+
+      </div>
+    </div>
+
+    <!-- 2. TRADING DASHBOARD VIEW -->
+    <div id="view-trade" class="view-panel h-full flex flex-col lg:flex-row hidden">
+      <!-- Pair Selector sidebar -->
+      <aside class="w-full lg:w-56 border-r border-white/5 bg-surface/40 p-4 flex flex-col justify-between shrink-0">
+        <div class="space-y-3">
+          <span class="text-[10px] text-gray-400 uppercase font-mono tracking-wider px-2 block">Cặp Giao Dịch Hot</span>
+          <div class="space-y-1" id="trading-pair-selector-box"></div>
+        </div>
+        <div class="glass-panel rounded-lg p-3 space-y-2 font-mono mt-4">
+          <div class="flex items-center justify-between border-b border-white/5 pb-1.5">
+            <span class="text-xs text-gray-400">Số Dư Tài Sản</span>
+            <i data-lucide="wallet" class="w-3.5 h-3.5 text-primary"></i>
+          </div>
+          <div class="space-y-1.5 text-xs" id="trading-sidebar-wallets"></div>
+        </div>
+      </aside>
+
+      <!-- Central Trading desk -->
+      <section class="flex-grow flex flex-col overflow-hidden min-w-0">
+        <div class="border-b border-white/5 p-4 flex flex-wrap items-center justify-between gap-4 font-mono text-xs bg-surface/20">
+          <div class="flex items-center gap-3">
+            <span id="active-pair-name" class="text-base font-bold font-display text-white">BTC/USDT</span>
+            <span id="active-pair-price" class="text-base font-bold text-success">$67,500.00</span>
+          </div>
+          <div class="flex gap-4">
+            <div>
+              <span class="text-gray-500 block text-[9px] uppercase">Thay Đổi 24h</span>
+              <span id="active-pair-delta" class="text-success font-semibold">+2.45%</span>
+            </div>
+            <div>
+              <span class="text-gray-500 block text-[9px] uppercase">Cao Nhất</span>
+              <span id="active-pair-high" class="text-white font-semibold">$68,142.50</span>
+            </div>
+            <div>
+              <span class="text-gray-500 block text-[9px] uppercase">Thấp Nhất</span>
+              <span id="active-pair-low" class="text-white font-semibold">$66,821.10</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex-grow grid grid-cols-1 lg:grid-cols-12 overflow-hidden min-h-0">
+          <!-- Chart area & open orders -->
+          <div class="lg:col-span-8 flex flex-col overflow-hidden border-r border-white/5">
+            <div class="flex-grow relative bg-[#090D14]/90 p-4 flex flex-col justify-center items-center text-center">
+              <div class="space-y-2">
+                <i data-lucide="line-chart" class="w-12 h-12 text-primary animate-pulse mx-auto"></i>
+                <h3 class="text-base font-bold text-white font-display">Biểu Đồ Giá Thời Gian Thực</h3>
+                <p class="text-xs text-gray-400 max-w-sm">Kết nối với Node.js WebSocket Server để cập nhật biểu đồ nến thời gian thực của cặp giao dịch.</p>
+                <div class="inline-block px-3 py-1 bg-primary/10 border border-primary/20 rounded-full text-xs text-primary font-mono" id="live-price-indicator">
+                  BTC/USDT: $67,500.00
+                </div>
+              </div>
+            </div>
+            <!-- Open Orders Ledger -->
+            <div class="h-44 border-t border-white/5 bg-surface/20 flex flex-col overflow-hidden">
+              <div class="border-b border-white/5 px-4 py-2 flex items-center justify-between bg-surface/40">
+                <span class="text-xs font-semibold text-white">Sổ Lệnh Chờ Giao Dịch (Open Orders)</span>
+                <span id="open-orders-count-badge" class="px-2 py-0.5 bg-primary/10 border border-primary/20 text-primary text-[10px] rounded-full">0 Orders</span>
+              </div>
+              <div class="flex-grow overflow-y-auto custom-scroll p-4">
+                <table class="w-full text-left text-xs font-mono">
+                  <thead>
+                    <tr class="text-[10px] text-gray-400 border-b border-white/5 pb-1.5 uppercase tracking-wider">
+                      <th class="pb-1">Cặp Coin</th>
+                      <th class="pb-1">Loại</th>
+                      <th class="pb-1">Phân Hệ</th>
+                      <th class="pb-1">Giá Khớp</th>
+                      <th class="pb-1">Số Lượng</th>
+                      <th class="pb-1">Trạng Thái</th>
+                      <th class="pb-1 text-right">Thao Tác</th>
+                    </tr>
+                  </thead>
+                  <tbody id="open-orders-tbody" class="divide-y divide-white/5"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Order Book / Market Depth -->
+          <div class="lg:col-span-4 flex flex-col overflow-hidden">
+            <div class="border-b border-white/5 px-4 py-2 bg-surface/40 text-xs font-semibold text-white">
+              Sổ Lệnh Thị Trường (Live Order Book)
+            </div>
+            <div class="flex-grow overflow-y-auto custom-scroll p-4 font-mono text-xs space-y-3">
+              <div id="exchange-asks-box" class="space-y-0.5 text-danger"></div>
+              <div class="py-2 border-y border-white/5 text-center flex items-center justify-between">
+                <span class="text-gray-500 uppercase text-[9px]">Mid Price</span>
+                <span id="exchange-mid-price" class="text-sm font-bold text-success">$67,500.00</span>
+              </div>
+              <div id="exchange-bids-box" class="space-y-0.5 text-success"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Action Sidebar (Buy/Sell input) -->
+      <aside class="w-full lg:w-72 border-l border-white/5 bg-surface/30 p-5 flex flex-col justify-between shrink-0">
+        <div class="space-y-4">
+          <div class="flex bg-white/5 rounded-lg p-0.5">
+            <button onclick="setTradingSide('buy')" id="btn-side-buy" class="flex-1 py-1.5 text-xs font-semibold rounded-md bg-success text-white transition-all">MUA</button>
+            <button onclick="setTradingSide('sell')" id="btn-side-sell" class="flex-1 py-1.5 text-xs font-semibold rounded-md text-gray-400 hover:text-white transition-all">BÁN</button>
+          </div>
+
+          <div class="flex justify-between items-center text-xs">
+            <span class="text-gray-400">Phương Thức:</span>
+            <div class="flex gap-2">
+              <button onclick="setTradingType('limit')" id="btn-type-limit" class="px-2 py-0.5 rounded border border-primary text-primary font-bold text-[10px]">LIMIT</button>
+              <button onclick="setTradingType('market')" id="btn-type-market" class="px-2 py-0.5 rounded border border-white/10 text-gray-400 text-[10px]">MARKET</button>
+            </div>
+          </div>
+
+          <div class="space-y-3 font-mono">
+            <div class="space-y-1">
+              <label class="text-[10px] text-gray-400 uppercase">Giá Đặt (USDT)</label>
+              <div class="relative rounded-lg bg-white/5 border border-white/10 px-3 py-2 flex items-center">
+                <input id="trade-input-price" type="number" step="any" class="bg-transparent w-full focus:outline-none text-white text-sm" value="67500.00" />
+                <span class="text-gray-500 text-xs select-none">USDT</span>
+              </div>
+            </div>
+            <div class="space-y-1">
+              <label class="text-[10px] text-gray-400 uppercase">Số Lượng</label>
+              <div class="relative rounded-lg bg-white/5 border border-white/10 px-3 py-2 flex items-center">
+                <input id="trade-input-qty" type="number" step="any" class="bg-transparent w-full focus:outline-none text-white text-sm" placeholder="0.00" />
+                <span id="trade-input-asset" class="text-gray-500 text-xs select-none">BTC</span>
+              </div>
+            </div>
+            <div class="flex justify-between text-xs text-gray-400 pt-1">
+              <span>Tổng Cộng:</span>
+              <span id="trade-total-cost" class="text-white font-bold">$0.00</span>
+            </div>
+          </div>
+        </div>
+
+        <button onclick="executeTrade()" id="btn-execute-trade" class="w-full bg-success hover:opacity-90 text-bg font-bold font-display py-3 rounded-lg transition-all mt-4">
+          THỰC HIỆN LỆNH MUA
+        </button>
+      </aside>
+    </div>
+
+    <!-- 3. COINS DETAIL VIEW (20+ COINS) -->
+    <div id="view-coin" class="view-panel h-full flex flex-col lg:flex-row hidden">
+      <!-- Coin List sidebar -->
+      <aside class="w-full lg:w-56 border-r border-white/5 bg-surface/40 p-4 flex flex-col overflow-y-auto custom-scroll shrink-0">
+        <span class="text-[10px] text-gray-400 uppercase font-mono tracking-wider px-2 mb-3 block">Danh Sách 21 Đồng Coin</span>
+        <div class="space-y-1" id="coin-list-nav-box"></div>
+      </aside>
+
+      <!-- Coin Detail Content -->
+      <section class="flex-grow overflow-y-auto custom-scroll p-6 space-y-6">
+        <div id="coin-detail-empty" class="h-full flex flex-col justify-center items-center text-center space-y-3 hidden">
+          <i data-lucide="coins" class="w-12 h-12 text-gray-600 animate-bounce"></i>
+          <h3 class="text-base font-bold text-white">Chưa Chọn Đồng Coin Nào</h3>
+          <p class="text-xs text-gray-400 max-w-sm">Vui lòng chọn một đồng coin trong danh sách bên cạnh để xem báo cáo phân tích chi tiết desu~.</p>
+        </div>
+
+        <div id="coin-detail-content" class="space-y-6">
+          <div class="flex flex-wrap items-center justify-between gap-4 border-b border-white/5 pb-4">
+            <div class="flex items-center gap-3">
+              <img id="coin-det-logo" src="" class="w-10 h-10 rounded-full" alt="coin" />
+              <div>
+                <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                  <span id="coin-det-name">Bitcoin</span>
+                  <span id="coin-det-symbol" class="text-xs px-2 py-0.5 bg-primary/10 border border-primary/20 text-primary rounded-full">BTC</span>
+                </h2>
+                <p id="coin-det-category" class="text-xs text-gray-400 uppercase mt-0.5">LAYER 1</p>
+              </div>
+            </div>
+            <div class="flex gap-4">
+              <a id="coin-det-web" href="#" target="_blank" class="px-3 py-1.5 bg-white/5 border border-white/5 rounded-lg text-xs hover:bg-white/10 transition-all flex items-center gap-1">
+                <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Website
+              </a>
+              <a id="coin-det-paper" href="#" target="_blank" class="px-3 py-1.5 bg-white/5 border border-white/5 rounded-lg text-xs hover:bg-white/10 transition-all flex items-center gap-1">
+                <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Whitepaper
+              </a>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 font-mono text-xs">
+            <div class="glass-panel rounded-lg p-4 space-y-1">
+              <span class="text-gray-400 text-[10px]">CUNG LƯU THÔNG</span>
+              <p id="coin-det-circulating" class="text-base font-bold text-white">19,700,000 BTC</p>
+            </div>
+            <div class="glass-panel rounded-lg p-4 space-y-1">
+              <span class="text-gray-400 text-[10px]">CUNG TỐI ĐA</span>
+              <p id="coin-det-max" class="text-base font-bold text-white">21,000,000 BTC</p>
+            </div>
+            <div class="glass-panel rounded-lg p-4 space-y-1">
+              <span class="text-gray-400 text-[10px]">TỶ LỆ LƯU THÔNG</span>
+              <p id="coin-det-ratio" class="text-base font-bold text-success">93.8%</p>
+            </div>
+          </div>
+
+          <div class="space-y-3">
+            <h3 class="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+              <i data-lucide="info" class="w-4 h-4 text-primary"></i> Mô Tả & Đánh Giá Chi Tiết
+            </h3>
+            <div class="glass-panel rounded-lg p-5 leading-relaxed text-sm text-gray-300 whitespace-pre-line" id="coin-det-desc">
+              <!-- Description content -->
+            </div>
+          </div>
+
+          <div class="space-y-4">
+            <h3 class="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+              <i data-lucide="newspaper" class="w-4 h-4 text-primary"></i> Tin Tức Liên Quan
+            </h3>
+            <div id="coin-det-news" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <!-- News cards -->
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- 4. KYC PORTAL VIEW -->
+    <div id="view-kyc" class="view-panel h-full overflow-y-auto px-6 py-8 hidden">
+      <div class="max-w-[700px] mx-auto glass-panel rounded-xl p-6 border border-white/5 space-y-6">
+        <div class="text-center space-y-2">
+          <div class="w-12 h-12 bg-primary/10 border border-primary/20 rounded-full flex items-center justify-center mx-auto text-primary">
+            <i data-lucide="shield-check" class="w-6 h-6"></i>
+          </div>
+          <h2 class="text-xl font-bold font-display text-white">Xác Thực Danh Tính (KYC)</h2>
+          <p class="text-xs text-gray-400">Để đảm bảo an toàn giao dịch tài chính, vui lòng hoàn tất xác thực thông tin tài khoản.</p>
+        </div>
+
+        <div id="kyc-success-panel" class="hidden bg-success/10 border border-success/20 rounded-lg p-5 text-center space-y-2">
+          <i data-lucide="check-circle" class="w-10 h-10 text-success mx-auto"></i>
+          <h3 class="text-sm font-bold text-success">Yêu Cầu KYC Của Sếp Đã Được Duyệt!</h3>
+          <p class="text-xs text-white/80">Tài khoản của Sếp đã kích hoạt đầy đủ tính năng nạp, rút và giao dịch không giới hạn.</p>
+        </div>
+
+        <div id="kyc-pending-panel" class="hidden bg-primary/10 border border-primary/20 rounded-lg p-5 text-center space-y-2">
+          <i data-lucide="clock" class="w-10 h-10 text-primary mx-auto animate-spin"></i>
+          <h3 class="text-sm font-bold text-primary">Đang Chờ Admin Phê Duyệt</h3>
+          <p class="text-xs text-white/80">Hồ sơ của Sếp đã được gửi thành công. Vui lòng kiểm tra mục Admin Operations để tự duyệt hồ sơ nhé!</p>
+        </div>
+
+        <form id="kyc-form" onsubmit="submitKYC(event)" class="space-y-4">
+          <div class="grid grid-cols-2 gap-4">
+            <div class="space-y-1.5">
+              <label class="text-[10px] text-gray-400 uppercase">Họ và Tên</label>
+              <input type="text" id="kyc-input-name" class="w-full bg-white/5 border border-white/10 rounded-lg px-3.5 py-2 text-white focus:outline-none focus:border-primary text-xs" required />
+            </div>
+            <div class="space-y-1.5">
+              <label class="text-[10px] text-gray-400 uppercase">Số CCCD / Hộ Chiếu</label>
+              <input type="text" id="kyc-input-id" class="w-full bg-white/5 border border-white/10 rounded-lg px-3.5 py-2 text-white focus:outline-none focus:border-primary text-xs" placeholder="0352XXXXXXXX" required />
+            </div>
+          </div>
+          <div class="space-y-1.5">
+            <label class="text-[10px] text-gray-400 uppercase">Ảnh Mặt Trước CCCD (Đường Dẫn)</label>
+            <input type="text" id="kyc-input-doc" class="w-full bg-white/5 border border-white/10 rounded-lg px-3.5 py-2 text-white focus:outline-none focus:border-primary text-xs" value="https://example.com/cccd_front.png" required />
+          </div>
+          <button type="submit" class="w-full bg-primary hover:opacity-90 text-bg font-bold font-display py-2.5 rounded-lg transition-all">
+            GỬI HỒ SƠ XÁC THỰC
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- 5. SUPPORT TICKETS VIEW -->
+    <div id="view-support" class="view-panel h-full overflow-y-auto px-6 py-8 hidden">
+      <div class="max-w-[800px] mx-auto space-y-6">
+        <div class="flex items-center justify-between border-b border-white/5 pb-4">
+          <div>
+            <h2 class="text-lg font-bold font-display text-white">Trung Tâm Hỗ Trợ Khách Hàng</h2>
+            <p class="text-xs text-gray-400 mt-0.5">Tạo yêu cầu trợ giúp đến ban quản trị VeloTrade desu~.</p>
+          </div>
+          <button onclick="toggleTicketForm(true)" class="bg-primary hover:opacity-90 text-bg font-bold text-xs px-3.5 py-2 rounded-lg transition-all flex items-center gap-1">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i> Tạo Ticket Mới
+          </button>
+        </div>
+
+        <!-- Create form dialog -->
+        <div id="support-form-box" class="glass-panel rounded-xl p-5 border border-primary/20 hidden space-y-4">
+          <h3 class="text-xs font-bold text-primary uppercase tracking-wider">Tạo Yêu Cầu Trợ Giúp Mới</h3>
+          <form onsubmit="submitTicket(event)" class="space-y-3.5">
+            <div class="grid grid-cols-2 gap-4">
+              <div class="space-y-1">
+                <label class="text-[10px] text-gray-400 uppercase">Chủ Đề</label>
+                <input type="text" id="ticket-input-subj" class="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-white text-xs focus:outline-none focus:border-primary" required />
+              </div>
+              <div class="space-y-1">
+                <label class="text-[10px] text-gray-400 uppercase">Phân Loại</label>
+                <select id="ticket-input-cat" class="w-full bg-[#111622] border border-white/10 rounded-lg px-3 py-1.5 text-white text-xs focus:outline-none focus:border-primary">
+                  <option value="DEPOSIT">Nạp/Rút Tiền</option>
+                  <option value="TRADING">Giao Dịch</option>
+                  <option value="KYC">Xác Thực Danh Tính</option>
+                  <option value="OTHER">Lỗi Khác</option>
+                </select>
+              </div>
+            </div>
+            <button type="submit" class="bg-primary text-bg font-bold px-4 py-2 rounded-lg text-xs hover:opacity-90 transition-all">GỬI TICKET</button>
+            <button type="button" onclick="toggleTicketForm(false)" class="bg-white/5 text-gray-400 px-4 py-2 rounded-lg text-xs hover:bg-white/10 transition-all ml-2">HỦY</button>
+          </form>
+        </div>
+
+        <!-- Tickets list -->
+        <div class="space-y-3">
+          <h3 class="text-xs font-bold text-white uppercase tracking-wider">Lịch Sử Yêu Cầu Của Sếp</h3>
+          <div id="tickets-list-container" class="space-y-3">
+            <!-- Programmatic items -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. ADMIN OPERATIONS VIEW -->
+    <div id="view-admin" class="view-panel h-full overflow-y-auto px-6 py-8 hidden">
+      <div class="max-w-[1400px] mx-auto space-y-6">
+        
+        <div class="border-b border-white/5 pb-4">
+          <h2 class="text-lg font-bold font-display text-white">VeloTrade Admin Management Operations</h2>
+          <p class="text-xs text-gray-400 mt-0.5">Bảng điều khiển tối cao dành riêng cho Quản trị viên (Admin) để giám sát và duyệt hệ thống.</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          
+          <!-- System Settings & Core controls -->
+          <div class="lg:col-span-4 space-y-4">
+            <h3 class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+              <i data-lucide="settings" class="w-4 h-4 text-primary"></i> Cấu Hình Hệ Thống
+            </h3>
+            <div class="glass-panel rounded-xl p-4 border border-white/5 space-y-4 font-mono text-xs">
+              <div class="space-y-2">
+                <div class="flex justify-between items-center">
+                  <span>Chế độ bảo trì:</span>
+                  <button id="admin-btn-maint" onclick="toggleMaintenance()" class="px-2.5 py-1 bg-white/5 border border-white/10 text-gray-400 rounded hover:bg-white/10">TẮT</button>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span>Giảm phí giao dịch (%):</span>
+                  <input type="number" id="admin-input-fee" class="bg-white/5 border border-white/10 rounded px-2 py-0.5 text-white w-16 text-center focus:outline-none" value="0" />
+                </div>
+              </div>
+              <button onclick="saveAdminSettings()" class="w-full bg-primary hover:opacity-90 text-bg font-bold font-display py-2 rounded-lg text-xs transition-all">LƯU CẤU HÌNH</button>
+            </div>
+          </div>
+
+          <!-- Pending KYC requests & Support tickets approvals -->
+          <div class="lg:col-span-8 space-y-6">
+            
+            <!-- Pending KYC panel -->
+            <div class="space-y-3">
+              <h3 class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+                <i data-lucide="shield-check" class="w-4 h-4 text-primary"></i> Đang chờ duyệt KYC (Pending KYC)
+              </h3>
+              <div class="overflow-x-auto rounded-xl border border-white/5 bg-surface/30">
+                <table class="w-full text-left border-collapse text-xs font-mono">
+                  <thead>
+                    <tr class="border-b border-white/5 text-[10px] text-gray-400 uppercase">
+                      <th class="px-4 py-2.5">User</th>
+                      <th class="px-4 py-2.5">CCCD/ID</th>
+                      <th class="px-4 py-2.5">Hồ Sơ</th>
+                      <th class="px-4 py-2.5 text-right">Duyệt</th>
+                    </tr>
+                  </thead>
+                  <tbody id="admin-kyc-tbody" class="divide-y divide-white/5">
+                    <!-- Dynamic -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Support tickets admin view -->
+            <div class="space-y-3">
+              <h3 class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+                <i data-lucide="help-circle" class="w-4 h-4 text-primary"></i> Yêu Cầu Hỗ Trợ Đang Mở (Support Tickets)
+              </h3>
+              <div class="overflow-x-auto rounded-xl border border-white/5 bg-surface/30">
+                <table class="w-full text-left border-collapse text-xs font-mono">
+                  <thead>
+                    <tr class="border-b border-white/5 text-[10px] text-gray-400 uppercase">
+                      <th class="px-4 py-2.5">Mã ID</th>
+                      <th class="px-4 py-2.5">Chủ Đề</th>
+                      <th class="px-4 py-2.5">Loại</th>
+                      <th class="px-4 py-2.5">Trạng Thái</th>
+                      <th class="px-4 py-2.5 text-right">Hành Động</th>
+                    </tr>
+                  </thead>
+                  <tbody id="admin-tickets-tbody" class="divide-y divide-white/5">
+                    <!-- Dynamic -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="glass-panel shrink-0 border-t border-white/5 py-3 px-6 text-center text-xs text-gray-500 z-40 font-mono flex flex-wrap justify-between items-center">
+    <p>© 2026 VeloTrade Inc. All rights reserved desu~.</p>
+    <div class="flex gap-4">
+      <span>Được thiết kế tinh xảo với 💖 bởi Grace & Sếp Thiên Ân</span>
+    </div>
+  </footer>
+
+  <!-- SCRIPT LOGIC ENGINE -->
+  <script>
+    // System Data Model State
+    const coinsData = [
+      { id: 1, symbol: 'BTC', name: 'Bitcoin', category: 'LAYER 1', circulating: '19,700,000 BTC', max: '21,000,000 BTC', ratio: '93.8%', logo: 'https://cryptologos.cc/logos/bitcoin-btc-logo.png', web: 'https://bitcoin.org', paper: 'https://bitcoin.org/bitcoin.pdf', desc: 'Bitcoin là đồng tiền điện tử đầu tiên trên thế giới, được tạo ra vào năm 2009 bởi một cá nhân hoặc nhóm ẩn danh dưới tên Satoshi Nakamoto. Hoạt động trên cơ chế đồng thuận Proof of Work (PoW) phi tập trung tuyệt đối.' },
+      { id: 2, symbol: 'ETH', name: 'Ethereum', category: 'LAYER 1', circulating: '122,000,000 ETH', max: 'Vô Hạn', ratio: 'N/A', logo: 'https://cryptologos.cc/logos/ethereum-eth-logo.png', web: 'https://ethereum.org', paper: 'https://ethereum.org/whitepaper.pdf', desc: 'Ethereum là mạng lưới blockchain mã nguồn mở phi tập trung có tính năng hợp đồng thông minh (Smart Contracts). Được đồng sáng lập bởi Vitalik Buterin vào năm 2015, Ethereum là nền tảng khởi nguồn cho các ứng dụng DeFi và NFT.' },
+      { id: 3, symbol: 'USDT', name: 'Tether', category: 'STABLECOIN', circulating: '112,000,000,000 USDT', max: 'Vô Hạn', ratio: 'N/A', logo: 'https://cryptologos.cc/logos/tether-usdt-logo.png', web: 'https://tether.to', paper: 'https://tether.to/whitepaper.pdf', desc: 'Tether (USDT) là đồng ổn định giá (Stablecoin) lớn nhất thị trường hiện nay, được neo giá trực tiếp theo tỷ lệ 1:1 với đồng đô la Mỹ USD, cung cấp tính thanh khoản dồi dào cho các nhà giao dịch.' },
+      { id: 4, symbol: 'SOL', name: 'Solana', category: 'LAYER 1', circulating: '461,000,000 SOL', max: 'Vô Hạn', ratio: 'N/A', logo: 'https://cryptologos.cc/logos/solana-sol-logo.png', web: 'https://solana.com', paper: 'https://solana.com/solana-whitepaper.pdf', desc: 'Solana là blockchain Layer 1 hiệu năng siêu cao, sử dụng cơ chế đồng thuận Proof of History (PoH) kết hợp Proof of Stake (PoS) để mang đến tốc độ xử lý hàng chục ngàn giao dịch mỗi giây với chi phí cực rẻ.' }
+    ];
+
+    let userKYC = {
+      name: '',
+      idNumber: '',
+      documentUrl: '',
+      status: 'unverified' // unverified, pending, verified
+    };
+
+    let tickets = [
+      { id: 'TKT-1024', subject: 'Lỗi nạp tiền USDT qua mạng TRC20', category: 'DEPOSIT', status: 'open' }
+    ];
+
+    let openOrders = [];
+    let currentPair = 'BTC_USDT';
+    let currentSide = 'buy';
+    let currentType = 'limit';
+    let maintenanceMode = false;
+    let btcPrice = 67500.00;
+
+    // Set active view routing
+    function switchView(viewId) {
+      document.querySelectorAll('.view-panel').forEach(el => el.classList.add('hidden'));
+      document.getElementById('view-' + viewId).classList.remove('hidden');
+
+      // Update navbar styling
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('text-primary', 'bg-white/5');
+        btn.classList.add('text-gray-400');
+      });
+      const activeBtn = document.getElementById('tab-' + viewId);
+      if (activeBtn) {
+        activeBtn.classList.remove('text-gray-400');
+        activeBtn.classList.add('text-primary', 'bg-white/5');
+      }
+
+      // Special rendering hooks
+      if (viewId === 'coin') renderCoinsList();
+      if (viewId === 'kyc') renderKYCView();
+      if (viewId === 'support') renderSupportTickets();
+      if (viewId === 'admin') renderAdminDashboard();
+    }
+
+    // Dynamic toast alerts helper desu~
+    function spawnToast(title, msg, type = 'success') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = 'glass-panel pointer-events-auto p-3.5 rounded-lg border-l-4 w-72 flex gap-3 transition-all duration-300 transform translate-y-2 opacity-0';
+      
+      if (type === 'success') {
+        toast.classList.add('border-l-success');
+        toast.innerHTML = `<i data-lucide="check-circle" class="w-5 h-5 text-success shrink-0"></i>`;
+      } else {
+        toast.classList.add('border-l-danger');
+        toast.innerHTML = `<i data-lucide="alert-triangle" class="w-5 h-5 text-danger shrink-0"></i>`;
+      }
+
+      toast.innerHTML += `
+        <div class="space-y-0.5">
+          <p class="text-xs font-bold text-white">${title}</p>
+          <p class="text-[11px] text-gray-400">${msg}</p>
+        </div>
+      `;
+
+      container.appendChild(toast);
+      lucide.createIcons();
+
+      // Trigger transition
+      setTimeout(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      }, 50);
+
+      // Dismiss timer
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-[-10px]');
+        setTimeout(() => toast.remove(), 300);
+      }, 4000);
+    }
+
+    // Real-time Marquee ticker stream simulation
+    function initMarquee() {
+      const stream = document.getElementById('marquee-stream');
+      let html = '';
+      coinsData.forEach(coin => {
+        html += `
+          <div class="flex items-center gap-2">
+            <span class="text-white font-bold">${coin.symbol}/USDT</span>
+            <span class="text-success" id="marquee-price-${coin.symbol}">$${btcPrice}</span>
+            <span class="text-success text-[10px] font-semibold">+2.4%</span>
+          </div>
+        `;
+      });
+      // Double the stream content to ensure seamless loop scroll desu~
+      stream.innerHTML = html + html;
+    }
+
+    // Simulated WebSocket background feed
+    setInterval(() => {
+      // Simulate price fluctuation
+      const fluctuation = (Math.random() - 0.5) * 80;
+      btcPrice += fluctuation;
+      btcPrice = parseFloat(btcPrice.toFixed(2));
+
+      // Update GUI components instantly
+      const livePriceInd = document.getElementById('live-price-indicator');
+      if (livePriceInd) livePriceInd.textContent = `BTC/USDT: $${btcPrice.toLocaleString()}`;
+
+      const activePairPrice = document.getElementById('active-pair-price');
+      if (activePairPrice) activePairPrice.textContent = `$${btcPrice.toLocaleString()}`;
+
+      const exchangeMid = document.getElementById('exchange-mid-price');
+      if (exchangeMid) exchangeMid.textContent = `$${btcPrice.toLocaleString()}`;
+
+      const marqueePriceBTC = document.getElementById('marquee-price-BTC');
+      if (marqueePriceBTC) marqueePriceBTC.textContent = `$${btcPrice.toLocaleString()}`;
+
+      renderOrderBookDepth();
+    }, 1200);
+
+    // Order book bids and asks generator desu~
+    function renderOrderBookDepth() {
+      const asksBox = document.getElementById('exchange-asks-box');
+      const bidsBox = document.getElementById('exchange-bids-box');
+      if (!asksBox || !bidsBox) return;
+
+      let asksHtml = '';
+      for (let i = 4; i > 0; i--) {
+        const askPrice = btcPrice + (i * 1.5);
+        const askQty = (Math.random() * 2).toFixed(4);
+        asksHtml += `
+          <div class="flex justify-between hover:bg-white/5 px-2 py-0.5 rounded transition-all">
+            <span>$${askPrice.toFixed(2)}</span>
+            <span class="text-gray-400">${askQty}</span>
+          </div>
+        `;
+      }
+      asksBox.innerHTML = asksHtml;
+
+      let bidsHtml = '';
+      for (let i = 1; i <= 4; i++) {
+        const bidPrice = btcPrice - (i * 1.5);
+        const bidQty = (Math.random() * 2).toFixed(4);
+        bidsHtml += `
+          <div class="flex justify-between hover:bg-white/5 px-2 py-0.5 rounded transition-all">
+            <span>$${bidPrice.toFixed(2)}</span>
+            <span class="text-gray-400">${bidQty}</span>
+          </div>
+        `;
+      }
+      bidsBox.innerHTML = bidsHtml;
+    }
+
+    // Interactive Trading Desk handlers
+    function setTradingSide(side) {
+      currentSide = side;
+      const buyBtn = document.getElementById('btn-side-buy');
+      const sellBtn = document.getElementById('btn-side-sell');
+      const execBtn = document.getElementById('btn-execute-trade');
+
+      if (side === 'buy') {
+        buyBtn.className = 'flex-1 py-1.5 text-xs font-semibold rounded-md bg-success text-white transition-all';
+        sellBtn.className = 'flex-1 py-1.5 text-xs font-semibold rounded-md text-gray-400 hover:text-white transition-all';
+        execBtn.className = 'w-full bg-success hover:opacity-90 text-bg font-bold font-display py-3 rounded-lg transition-all mt-4';
+        execBtn.textContent = 'THỰC HIỆN LỆNH MUA';
+      } else {
+        buyBtn.className = 'flex-1 py-1.5 text-xs font-semibold rounded-md text-gray-400 hover:text-white transition-all';
+        sellBtn.className = 'flex-1 py-1.5 text-xs font-semibold rounded-md bg-danger text-white transition-all';
+        execBtn.className = 'w-full bg-danger hover:opacity-90 text-white font-bold font-display py-3 rounded-lg transition-all mt-4';
+        execBtn.textContent = 'THỰC HIỆN LỆNH BÁN';
+      }
+    }
+
+    function setTradingType(type) {
+      currentType = type;
+      const limitBtn = document.getElementById('btn-type-limit');
+      const marketBtn = document.getElementById('btn-type-market');
+      const priceInput = document.getElementById('trade-input-price');
+
+      if (type === 'limit') {
+        limitBtn.className = 'px-2 py-0.5 rounded border border-primary text-primary font-bold text-[10px]';
+        marketBtn.className = 'px-2 py-0.5 rounded border border-white/10 text-gray-400 text-[10px]';
+        priceInput.disabled = false;
+        priceInput.value = btcPrice;
+      } else {
+        limitBtn.className = 'px-2 py-0.5 rounded border border-white/10 text-gray-400 text-[10px]';
+        marketBtn.className = 'px-2 py-0.5 rounded border border-primary text-primary font-bold text-[10px]';
+        priceInput.disabled = true;
+        priceInput.value = 'MKT PRICE';
+      }
+    }
+
+    // Calculate total trade cost dynamically
+    const qtyInput = document.getElementById('trade-input-qty');
+    if (qtyInput) {
+      qtyInput.addEventListener('input', () => {
+        const qty = parseFloat(qtyInput.value) || 0;
+        const price = currentType === 'limit' ? (parseFloat(document.getElementById('trade-input-price').value) || 0) : btcPrice;
+        const total = qty * price;
+        document.getElementById('trade-total-cost').textContent = `$${total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+      });
+    }
+
+    function executeTrade() {
+      if (maintenanceMode) {
+        spawnToast('Hệ thống bảo trì', 'Vui lòng thực hiện lại giao dịch sau desu~.', 'error');
+        return;
+      }
+
+      const qty = parseFloat(document.getElementById('trade-input-qty').value);
+      if (!qty || qty <= 0) {
+        spawnToast('Lỗi đặt lệnh', 'Vui lòng nhập số lượng hợp lệ nha Sếp!', 'error');
+        return;
+      }
+
+      const price = currentType === 'limit' ? parseFloat(document.getElementById('trade-input-price').value) : btcPrice;
+      
+      const newOrder = {
+        id: Math.floor(Math.random() * 90000) + 10000,
+        pair: currentPair,
+        side: currentSide.toUpperCase(),
+        type: currentType.toUpperCase(),
+        price: price,
+        qty: qty,
+        status: currentType === 'limit' ? 'PENDING' : 'FILLED'
+      };
+
+      if (currentType === 'limit') {
+        openOrders.push(newOrder);
+        spawnToast('Đặt lệnh thành công', `Lệnh LIMIT ${currentSide.toUpperCase()} ${qty} ${currentPair.split('_')[0]} đã được đặt chờ khớp!`, 'success');
+      } else {
+        spawnToast('Khớp lệnh thành công', `Đã mua thành công ${qty} ${currentPair.split('_')[0]} theo giá thị trường!`, 'success');
+      }
+
+      renderOpenOrders();
+    }
+
+    function renderOpenOrders() {
+      const tbody = document.getElementById('open-orders-tbody');
+      const badge = document.getElementById('open-orders-count-badge');
+      if (!tbody) return;
+
+      badge.textContent = `${openOrders.length} Orders`;
+
+      if (openOrders.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-gray-500">Không có lệnh chờ nào.</td></tr>`;
+        return;
+      }
+
+      let html = '';
+      openOrders.forEach(order => {
+        html += `
+          <tr class="hover:bg-white/5 transition-all">
+            <td class="py-2 text-white font-bold">${order.pair}</td>
+            <td class="py-2 text-xs">${order.type}</td>
+            <td class="py-2 ${order.side === 'BUY' ? 'text-success' : 'text-danger'} font-semibold">${order.side}</td>
+            <td class="py-2">$${order.price.toLocaleString()}</td>
+            <td class="py-2">${order.qty}</td>
+            <td class="py-2 text-primary font-bold">${order.status}</td>
+            <td class="py-2 text-right">
+              <button onclick="cancelOrder(${order.id})" class="text-danger hover:underline">Hủy</button>
+            </td>
+          </tr>
+        `;
+      });
+      tbody.innerHTML = html;
+    }
+
+    function cancelOrder(id) {
+      openOrders = openOrders.filter(o => o.id !== id);
+      spawnToast('Hủy lệnh', 'Đã hủy lệnh thành công desu~!', 'success');
+      renderOpenOrders();
+    }
+
+    // Sidebar selectors setup
+    function setupPairSelector() {
+      const box = document.getElementById('trading-pair-selector-box');
+      if (!box) return;
+      let html = '';
+      coinsData.forEach(coin => {
+        if (coin.symbol !== 'USDT') {
+          html += `
+            <button onclick="changeActivePair('${coin.symbol}_USDT')" class="w-full text-left px-3 py-2 text-xs rounded-lg transition-all flex justify-between items-center ${coin.symbol === 'BTC' ? 'bg-white/5 text-primary border-l-2 border-primary' : 'text-gray-400 hover:text-white'}">
+              <span class="font-bold">${coin.symbol}/USDT</span>
+              <span>$${btcPrice}</span>
+            </button>
+          `;
+        }
+      });
+      box.innerHTML = html;
+    }
+
+    function changeActivePair(pair) {
+      currentPair = pair;
+      document.getElementById('active-pair-name').textContent = pair.replace('_', '/');
+      document.getElementById('trade-input-asset').textContent = pair.split('_')[0];
+      setupPairSelector();
+    }
+
+    // Setup sidebar wallet balances
+    function renderSidebarWallets() {
+      const box = document.getElementById('trading-sidebar-wallets');
+      if (!box) return;
+      box.innerHTML = `
+        <div class="flex justify-between text-xs">
+          <span>USDT</span>
+          <span class="text-white font-bold">120,480.00 USDT</span>
+        </div>
+        <div class="flex justify-between text-xs">
+          <span>BTC</span>
+          <span class="text-white font-bold">0.324 BTC</span>
+        </div>
+        <div class="flex justify-between text-xs">
+          <span>ETH</span>
+          <span class="text-white font-bold">4.120 ETH</span>
+        </div>
+        <div class="flex justify-between text-xs">
+          <span>SOL</span>
+          <span class="text-white font-bold">25.500 SOL</span>
+        </div>
+      `;
+    }
+
+    // CMS 21 Coins View Engine desu~
+    function renderCoinsList() {
+      const box = document.getElementById('coin-list-nav-box');
+      if (!box) return;
+
+      let html = '';
+      coinsData.forEach(coin => {
+        html += `
+          <button onclick="selectActiveCoin(${coin.id})" class="w-full text-left px-3 py-2 text-xs rounded-lg transition-all flex items-center gap-2 text-gray-400 hover:text-white">
+            <img src="${coin.logo}" class="w-4 h-4 rounded-full" alt="" />
+            <span class="font-bold text-white">${coin.name}</span>
+            <span class="text-gray-500">(${coin.symbol})</span>
+          </button>
+        `;
+      });
+      box.innerHTML = html;
+      selectActiveCoin(1); // Auto-select Bitcoin
+    }
+
+    function selectActiveCoin(id) {
+      const coin = coinsData.find(c => c.id === id);
+      if (!coin) return;
+
+      document.getElementById('coin-detail-empty').classList.add('hidden');
+      document.getElementById('coin-detail-content').classList.remove('hidden');
+
+      document.getElementById('coin-det-logo').src = coin.logo;
+      document.getElementById('coin-det-name').textContent = coin.name;
+      document.getElementById('coin-det-symbol').textContent = coin.symbol;
+      document.getElementById('coin-det-category').textContent = coin.category;
+      document.getElementById('coin-det-circulating').textContent = coin.circulating;
+      document.getElementById('coin-det-max').textContent = coin.max;
+      document.getElementById('coin-det-ratio').textContent = coin.ratio;
+      document.getElementById('coin-det-desc').textContent = coin.desc;
+
+      document.getElementById('coin-det-web').href = coin.web;
+      document.getElementById('coin-det-paper').href = coin.paper;
+
+      // Mock news tied to the coin
+      const newsBox = document.getElementById('coin-det-news');
+      newsBox.innerHTML = `
+        <div class="glass-panel rounded-lg p-4 space-y-2">
+          <h4 class="font-bold text-white">Tin Tức: Nâng cấp mạng lưới của ${coin.name} thành công tốt đẹp</h4>
+          <p class="text-gray-400 text-[11px]">Bản nâng cấp giúp cải thiện tốc độ giao dịch đáng kể của ${coin.symbol}.</p>
+          <span class="text-[10px] text-primary">Nguồn: VeloTrade Editorial</span>
+        </div>
+        <div class="glass-panel rounded-lg p-4 space-y-2">
+          <h4 class="font-bold text-white">Phân Tích: Lượng ví hoạt động của ${coin.symbol} tăng vọt</h4>
+          <p class="text-gray-400 text-[11px]">Báo cáo on-chain ghi nhận dòng tiền đầu tư đổ mạnh vào ${coin.name}.</p>
+          <span class="text-[10px] text-primary">Nguồn: VeloTrade Intelligence</span>
+        </div>
+      `;
+    }
+
+    // KYC forms handlers desu~
+    function renderKYCView() {
+      const successPanel = document.getElementById('kyc-success-panel');
+      const pendingPanel = document.getElementById('kyc-pending-panel');
+      const form = document.getElementById('kyc-form');
+
+      successPanel.classList.add('hidden');
+      pendingPanel.classList.add('hidden');
+      form.classList.add('hidden');
+
+      if (userKYC.status === 'unverified') {
+        form.classList.remove('hidden');
+      } else if (userKYC.status === 'pending') {
+        pendingPanel.classList.remove('hidden');
+      } else {
+        successPanel.classList.remove('hidden');
+      }
+    }
+
+    function submitKYC(event) {
+      event.preventDefault();
+      userKYC.name = document.getElementById('kyc-input-name').value;
+      userKYC.idNumber = document.getElementById('kyc-input-id').value;
+      userKYC.documentUrl = document.getElementById('kyc-input-doc').value;
+      userKYC.status = 'pending';
+
+      spawnToast('Nộp hồ sơ thành công', 'Hồ sơ KYC đã được gửi lên hệ thống phê duyệt desu~!', 'success');
+      renderKYCView();
+    }
+
+    // Support tickets engine desu~
+    function renderSupportTickets() {
+      const container = document.getElementById('tickets-list-container');
+      if (!container) return;
+
+      if (tickets.length === 0) {
+        container.innerHTML = `<p class="text-center py-4 text-gray-500 text-xs">Chưa có yêu cầu hỗ trợ nào được tạo.</p>`;
+        return;
+      }
+
+      let html = '';
+      tickets.forEach(t => {
+        html += `
+          <div class="glass-panel rounded-lg p-4 border border-white/5 flex justify-between items-center">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-bold text-white">${t.id}</span>
+                <span class="px-2 py-0.5 rounded text-[9px] bg-primary/10 border border-primary/20 text-primary font-bold">${t.category}</span>
+              </div>
+              <p class="text-xs text-white">${t.subject}</p>
+            </div>
+            <div>
+              <span class="px-2.5 py-1 rounded text-xs font-bold ${t.status === 'open' ? 'bg-success/15 text-success' : 'bg-gray-700 text-gray-400'}">${t.status.toUpperCase()}</span>
+            </div>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    function toggleTicketForm(show) {
+      const form = document.getElementById('support-form-box');
+      if (show) form.classList.remove('hidden');
+      else form.classList.add('hidden');
+    }
+
+    function submitTicket(event) {
+      event.preventDefault();
+      const subj = document.getElementById('ticket-input-subj').value;
+      const cat = document.getElementById('ticket-input-cat').value;
+
+      const newTkt = {
+        id: 'TKT-' + (Math.floor(Math.random() * 8999) + 1000),
+        subject: subj,
+        category: cat,
+        status: 'open'
+      };
+
+      tickets.unshift(newTkt);
+      spawnToast('Gửi ticket thành công', 'Yêu cầu của Sếp đã được gửi đến ban quản trị desu~!', 'success');
+      toggleTicketForm(false);
+      renderSupportTickets();
+    }
+
+    // Admin Dashboard operations desu~
+    function renderAdminDashboard() {
+      const kycTbody = document.getElementById('admin-kyc-tbody');
+      const ticketTbody = document.getElementById('admin-tickets-tbody');
+
+      // Admin KYC approve panel
+      if (kycTbody) {
+        if (userKYC.status !== 'pending') {
+          kycTbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-gray-500">Không có yêu cầu duyệt danh tính nào.</td></tr>`;
+        } else {
+          kycTbody.innerHTML = `
+            <tr class="hover:bg-white/5 transition-all">
+              <td class="px-4 py-2.5 text-white font-bold">${userKYC.name}</td>
+              <td class="px-4 py-2.5">${userKYC.idNumber}</td>
+              <td class="px-4 py-2.5 text-primary hover:underline cursor-pointer">Xem ảnh CCCD</td>
+              <td class="px-4 py-2.5 text-right flex gap-2 justify-end">
+                <button onclick="approveKYC(true)" class="bg-success text-bg px-2.5 py-1 rounded font-bold hover:opacity-90">Duyệt</button>
+                <button onclick="approveKYC(false)" class="bg-danger text-white px-2.5 py-1 rounded font-bold hover:opacity-90">Từ chối</button>
+              </td>
+            </tr>
+          `;
+        }
+      }
+
+      // Admin Tickets control panel
+      if (ticketTbody) {
+        if (tickets.length === 0) {
+          ticketTbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-gray-500">Không có ticket nào cần xử lý.</td></tr>`;
+          return;
+        }
+
+        let html = '';
+        tickets.forEach(t => {
+          html += `
+            <tr class="hover:bg-white/5 transition-all">
+              <td class="px-4 py-2.5 text-white font-bold">${t.id}</td>
+              <td class="px-4 py-2.5">${t.subject}</td>
+              <td class="px-4 py-2.5 text-primary font-bold">${t.category}</td>
+              <td class="px-4 py-2.5">
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold ${t.status === 'open' ? 'bg-success/10 text-success' : 'bg-gray-700 text-gray-400'}">${t.status}</span>
+              </td>
+              <td class="px-4 py-2.5 text-right">
+                ${t.status === 'open' ? `<button onclick="resolveTicket('${t.id}')" class="bg-primary text-bg px-2.5 py-1 rounded font-bold hover:opacity-90">Giải Quyết</button>` : `<span class="text-gray-500">Đã xử lý</span>`}
+              </td>
+            </tr>
+          `;
+        });
+        ticketTbody.innerHTML = html;
+      }
+    }
+
+    function approveKYC(isApproved) {
+      if (isApproved) {
+        userKYC.status = 'verified';
+        spawnToast('Phê duyệt KYC', 'Đã duyệt hồ sơ xác thực danh tính của khách hàng!', 'success');
+      } else {
+        userKYC.status = 'unverified';
+        spawnToast('Từ chối KYC', 'Đã từ chối hồ sơ xác thực danh tính khách hàng!', 'error');
+      }
+      renderAdminDashboard();
+    }
+
+    function resolveTicket(id) {
+      const ticket = tickets.find(t => t.id === id);
+      if (ticket) {
+        ticket.status = 'resolved';
+        spawnToast('Giải quyết Ticket', `Đã xử lý thành công ticket ${id}!`, 'success');
+      }
+      renderAdminDashboard();
+    }
+
+    function toggleMaintenance() {
+      maintenanceMode = !maintenanceMode;
+      const btn = document.getElementById('admin-btn-maint');
+      btn.textContent = maintenanceMode ? 'BẬT' : 'TẮT';
+      btn.className = maintenanceMode 
+        ? 'px-2.5 py-1 bg-danger/25 border border-danger text-danger rounded hover:bg-danger/35 font-bold' 
+        : 'px-2.5 py-1 bg-white/5 border border-white/10 text-gray-400 rounded hover:bg-white/10';
+    }
+
+    function saveAdminSettings() {
+      const fee = document.getElementById('admin-input-fee').value;
+      spawnToast('Lưu cấu hình', `Đã cập nhật hệ thống thành công. Giảm phí: ${fee}% desu~!`, 'success');
+    }
+
+    // Startup Initializations
+    window.onload = () => {
+      lucide.createIcons();
+      switchView('landing');
+      initMarquee();
+      renderOrderBookDepth();
+      setupPairSelector();
+      renderSidebarWallets();
+    };
+  </script>
+</body>
+</html>
